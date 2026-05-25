@@ -170,7 +170,7 @@ code {
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is(.dark *), .dark &, &.dark);
 
 @theme inline {
   --font-heading: var(--font-sans);
@@ -256,3 +256,30 @@ code {
     @apply bg-background text-foreground;}
   html {
     @apply font-sans;}}
+
+/* ── App-level theme tokens ── */
+:root {
+  --app-bg:        #f4f4f5;
+  --app-text:      #18181b;
+  --header-bg:     #e4e4e7;
+  --panel-bg:      #ffffff;
+  --notebook-bg:   #e8e8ec;
+  --app-border:    rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  --app-bg:        #1c1c1f;
+  --app-text:      #ffffff;
+  --header-bg:     #1c1c1f;
+  --panel-bg:      #23272a;
+  --notebook-bg:   #1e2124;
+  --app-border:    rgba(255, 255, 255, 0.1);
+}
+
+/* Plain utility classes that read the CSS vars above */
+.bg-app          { background-color: var(--app-bg); }
+.bg-header       { background-color: var(--header-bg); }
+.bg-panel        { background-color: var(--panel-bg); transition: background-color 150ms ease; }
+.bg-notebook     { background-color: var(--notebook-bg); transition: background-color 150ms ease; }
+.text-app        { color: var(--app-text); }
+.border-app-border { border-color: var(--app-border); }
