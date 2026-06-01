@@ -8,6 +8,7 @@ const defaultNotebooks = [
     date: "May 20, 2026",
     sources: "1 source",
     pinned: false,
+    subjectId: "VNR202", // which subject this chat belongs to
   },
 ];
 
