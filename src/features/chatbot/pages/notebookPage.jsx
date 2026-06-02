@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import NotebookHeader from "@/components/common/notebookHeader";
 import SourcesPanel from "./sourcesPanel";
@@ -20,6 +20,12 @@ export default function NotebookPage() {
   const allSessions = useChatbotStore((s) => s.sessions);
   const setActiveSession = useChatbotStore((s) => s.setActiveSession);
   const activeSessionId = useChatbotStore((s) => s.activeSessionId);
+
+  // Reset active session whenever the subject changes so a previous subject's
+  // session is never shown in the new subject's chat panel.
+  useEffect(() => {
+    setActiveSession(null);
+  }, [subjectId, setActiveSession]);
 
   // Filter outside the selector so the result is stable via useMemo
   const sessions = useMemo(
