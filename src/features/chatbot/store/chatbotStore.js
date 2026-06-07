@@ -180,6 +180,15 @@ export const useChatbotStore = create(
             state.activeSessionId === sessionId ? null : state.activeSessionId,
         })),
 
+      /** Replace a local placeholder session ID with the real backend UUID */
+      promoteSessionId: (localId, realId) =>
+        set((state) => ({
+          sessions: state.sessions.map((s) =>
+            s.id === localId ? { ...s, id: realId } : s
+          ),
+          activeSessionId: state.activeSessionId === localId ? realId : state.activeSessionId,
+        })),
+
       // ── Message helpers ──────────────────────────────────────────────────
 
       /** Send a user message and append a simulated bot reply */

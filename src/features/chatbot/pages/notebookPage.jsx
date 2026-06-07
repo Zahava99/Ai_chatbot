@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import NotebookHeader from "@/components/common/notebookHeader";
 import SourcesPanel from "./sourcesPanel";
@@ -14,10 +14,8 @@ export default function NotebookPage() {
 
   // Subject the student navigated into (set by handleSubjectClick in mainPage)
   const subjectId = location.state?.subjectId ?? null;
+  const subjectCode = location.state?.subjectCode ?? null;
 
-  // Select the raw array — never call a function inside a Zustand selector
-  // as it returns a new reference every render and causes an infinite loop
-  const allSessions = useChatbotStore((s) => s.sessions);
   const setActiveSession = useChatbotStore((s) => s.setActiveSession);
   const activeSessionId = useChatbotStore((s) => s.activeSessionId);
 
@@ -26,12 +24,6 @@ export default function NotebookPage() {
   useEffect(() => {
     setActiveSession(null);
   }, [subjectId, setActiveSession]);
-
-  // Filter outside the selector so the result is stable via useMemo
-  const sessions = useMemo(
-    () => allSessions.filter((s) => s.subjectId === (subjectId ?? "")),
-    [allSessions, subjectId]
-  );
 
   return (
     <div className="flex flex-col h-screen bg-notebook text-app overflow-hidden">
@@ -50,7 +42,6 @@ export default function NotebookPage() {
             <SourcesPanel
               collapsed={sourcesCollapsed}
               onToggle={() => setSourcesCollapsed((v) => !v)}
-              sessions={sessions}
               activeSessionId={activeSessionId}
               onSelectSession={setActiveSession}
               subjectId={subjectId}
@@ -59,7 +50,7 @@ export default function NotebookPage() {
 
           {/* Chat panel */}
           <div className="flex-1 flex flex-col rounded-xl bg-panel border border-app-border overflow-hidden min-w-0">
-            <ChatBotPanel subjectId={subjectId} />
+            <ChatBotPanel subjectId={subjectId} subjectCode={subjectCode} />
           </div>
 
         </div>

@@ -24,7 +24,7 @@ export default function LoginPage() {
 
         <AuthCard>
           {/* Tab switcher */}
-          <div className="flex bg-black/5 dark:bg-white/5 rounded-xl p-1 mb-6">
+          {/* <div className="flex bg-black/5 dark:bg-white/5 rounded-xl p-1 mb-6">
             <span className="flex-1 py-2 rounded-lg text-sm font-medium text-center bg-black/10 dark:bg-white/10 text-app shadow-sm">
               Sign in
             </span>
@@ -34,10 +34,10 @@ export default function LoginPage() {
             >
               Sign up
             </Link>
-          </div>
+          </div> */}
 
           {/* Role selector */}
-          <RoleSelector role={role} setRole={setRole} />
+          {/* <RoleSelector role={role} setRole={setRole} /> */}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,12 +88,12 @@ export default function LoginPage() {
           </form>
 
           {/* Footer link */}
-          <p className="text-center text-sm text-app opacity-40 mt-4">
+          {/* <p className="text-center text-sm text-app opacity-40 mt-4">
             Don't have an account yet?{" "}
             <Link to="/register" className="text-emerald-400 hover:underline font-medium">
               Click here to Sign Up
             </Link>
-          </p>
+          </p> */}
         </AuthCard>
       </div>
     </div>
