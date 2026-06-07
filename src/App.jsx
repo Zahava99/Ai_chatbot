@@ -52,8 +52,10 @@ import TestsetManagementPage from "@/features/dataset/pages/TestsetManagementPag
 import EvaluationResultPage  from "@/features/dataset/pages/EvaluationResultPage";
 
 // ── Admin ──
-import SystemSettingsPage from "@/features/admin/pages/SystemSettingsPage";
-import UserManagementPage from "@/features/admin/pages/UserManagementPage";
+import SystemSettingsPage    from "@/features/admin/pages/SystemSettingsPage";
+import UserManagementPage    from "@/features/admin/pages/UserManagementPage";
+import LecturerManagementPage from "@/features/admin/pages/LecturerManagementPage";
+import StudentManagementPage  from "@/features/admin/pages/StudentManagementPage";
 
 // ── Legacy notebook (keep existing) ──
 import MainPage     from "@/features/chatbot/pages/mainPage";
@@ -117,8 +119,10 @@ function App() {
             <Route path="/dataset/evaluation" element={<EvaluationResultPage />} />
 
             {/* Admin */}
-            <Route path="/settings"      element={<SystemSettingsPage />} />
-            <Route path="/admin/users"   element={<UserManagementPage />} />
+            <Route path="/settings"        element={<SystemSettingsPage />} />
+            <Route path="/admin/users"     element={<UserManagementPage />} />
+            <Route path="/lectures"        element={<LecturerManagementPage />} />
+            <Route path="/students"        element={<StudentManagementPage />} />
           </Route>
 
           {/* Fallback */}

@@ -4,8 +4,8 @@ import {
   LayoutDashboard, MessageSquare, FileText, BookOpen,
   FlaskConical, BarChart3, History, LineChart, Settings,
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
-  Sun, Monitor, Upload, User, HelpCircle, ExternalLink,
-  Database,
+  Sun, Monitor, User, HelpCircle, ExternalLink,
+  Database, GraduationCap, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
@@ -26,6 +26,14 @@ const NAV_GROUPS = [
       { to: "/documents", icon: FileText,  label: "Tài liệu" },
       { to: "/subjects",  icon: BookOpen,  label: "Môn học" },
       { to: "/dataset",   icon: Database,  label: "Dataset" },
+    ],
+  },
+  {
+    label: "User Management",
+    items: [
+      { to: "/admin/users", icon: Users,          label: "Overview" },
+      { to: "/lectures",    icon: GraduationCap,  label: "Giảng Viên" },
+      { to: "/students",    icon: Users,          label: "Sinh Viên" },
     ],
   },
   {
