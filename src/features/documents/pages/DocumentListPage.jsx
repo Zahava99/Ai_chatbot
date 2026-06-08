@@ -58,7 +58,7 @@ export default function DocumentListPage() {
           <p className="text-sm text-app opacity-50 mt-0.5">{DOCS.length} documents total</p>
         </div>
         <button
-          onClick={() => navigate("/documents/upload")}
+          onClick={() => navigate("/documents_upload")}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
         >
           <Upload size={15} /> Upload
@@ -130,8 +130,8 @@ export default function DocumentListPage() {
                     </button>
                     {openMenu === doc.id && (
                       <DocMenu
-                        onView={() => { navigate(`/documents/${doc.id}`); setOpenMenu(null); }}
-                        onReindex={() => { navigate(`/documents/${doc.id}/reindex`); setOpenMenu(null); }}
+                        onView={() => { navigate(`/documents_upload/${doc.id}`); setOpenMenu(null); }}
+                        onReindex={() => { navigate(`/documents_upload/${doc.id}/reindex`); setOpenMenu(null); }}
                         onDelete={() => { setDeleteModal(doc); setOpenMenu(null); }}
                       />
                     )}

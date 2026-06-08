@@ -17,9 +17,9 @@ export default function ReindexPage() {
     <div className="p-6 max-w-lg mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-app opacity-40 mb-5">
-        <button onClick={() => navigate("/documents")} className="hover:opacity-80">Documents</button>
+        <button onClick={() => navigate("/documents_upload")} className="hover:opacity-80">Documents</button>
         <ChevronRight size={12} />
-        <button onClick={() => navigate(`/documents/${id}`)} className="hover:opacity-80">Lecture_01.pdf</button>
+        <button onClick={() => navigate(`/documents_upload/${id}`)} className="hover:opacity-80">Lecture_01.pdf</button>
         <ChevronRight size={12} />
         <span className="text-app opacity-70">Re-index</span>
       </div>
@@ -103,11 +103,11 @@ export default function ReindexPage() {
       </div>
 
       <div className="flex gap-3 mt-5">
-        <button onClick={() => navigate(`/documents/${id}`)} className="flex-1 py-2.5 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
+        <button onClick={() => navigate(`/documents_upload/${id}`)} className="flex-1 py-2.5 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
           Cancel
         </button>
         <button
-          onClick={() => navigate("/documents/processing")}
+          onClick={() => navigate("/documents_upload/processing")}
           className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
         >
           <RefreshCw size={14} /> Start Re-index

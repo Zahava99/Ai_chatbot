@@ -62,7 +62,7 @@ export default function SubjectDetailPage() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-app-border">
           <p className="text-sm font-semibold text-app">Assigned Documents ({docs.length})</p>
           <button
-            onClick={() => navigate("/documents/upload")}
+            onClick={() => navigate("/documents_upload")}
             className="flex items-center gap-1.5 text-xs text-emerald-400 hover:underline"
           >
             <Plus size={13} /> Add document

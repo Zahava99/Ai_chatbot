@@ -52,8 +52,9 @@ import TestsetManagementPage from "@/features/dataset/pages/TestsetManagementPag
 import EvaluationResultPage  from "@/features/dataset/pages/EvaluationResultPage";
 
 // ── Admin ──
-import SystemSettingsPage    from "@/features/admin/pages/SystemSettingsPage";
-import UserManagementPage    from "@/features/admin/pages/UserManagementPage";
+import AdminDashboardPage     from "@/features/admin/pages/AdminDashboardPage";
+import SystemSettingsPage     from "@/features/admin/pages/SystemSettingsPage";
+import UserManagementPage     from "@/features/admin/pages/UserManagementPage";
 import LecturerManagementPage from "@/features/admin/pages/LecturerManagementPage";
 import StudentManagementPage  from "@/features/admin/pages/StudentManagementPage";
 
@@ -83,12 +84,13 @@ function App() {
 
             {/* Documents */}
             <Route path="/documents"                    element={<DocumentListPage />} />
-            <Route path="/documents/upload"             element={<UploadDocumentPage />} />
-            <Route path="/documents/processing"         element={<UploadProcessingPage />} />
-            <Route path="/documents/:id"                element={<DocumentDetailPage />} />
-            <Route path="/documents/:id/preview"        element={<DocumentPreviewPage />} />
-            <Route path="/documents/:id/chunks"         element={<ChunkViewerPage />} />
-            <Route path="/documents/:id/reindex"        element={<ReindexPage />} />
+            {/* <Route path="/documents/upload"             element={<UploadDocumentPage />} /> */}
+            <Route path="/documents_upload" element={<UploadDocumentPage/>}/>
+            <Route path="/documents_upload/processing"         element={<UploadProcessingPage />} />
+            <Route path="/documents_upload/:id"                element={<DocumentDetailPage />} />
+            <Route path="/documents_upload/:id/preview"        element={<DocumentPreviewPage />} />
+            <Route path="/documents_upload/:id/chunks"         element={<ChunkViewerPage />} />
+            <Route path="/documents_upload/:id/reindex"        element={<ReindexPage />} />
 
             {/* Subjects */}
             <Route path="/subjects"     element={<SubjectListPage />} />
@@ -119,6 +121,7 @@ function App() {
             <Route path="/dataset/evaluation" element={<EvaluationResultPage />} />
 
             {/* Admin */}
+            <Route path="/admin"           element={<AdminDashboardPage />} />
             <Route path="/settings"        element={<SystemSettingsPage />} />
             <Route path="/admin/users"     element={<UserManagementPage />} />
             <Route path="/lectures"        element={<LecturerManagementPage />} />

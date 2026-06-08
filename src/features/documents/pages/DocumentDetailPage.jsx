@@ -34,7 +34,7 @@ export default function DocumentDetailPage() {
     <div className="p-6 max-w-3xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-app opacity-40 mb-5">
-        <button onClick={() => navigate("/documents")} className="hover:opacity-80">Documents</button>
+        <button onClick={() => navigate("/documents_upload")} className="hover:opacity-80">Documents</button>
         <ChevronRight size={12} />
         <span className="text-app opacity-70">{DOC.name}</span>
       </div>
@@ -59,10 +59,10 @@ export default function DocumentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => navigate(`/documents/${id}/preview`)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
+          <button onClick={() => navigate(`/documents_upload/${id}/preview`)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
             <Eye size={14} /> Preview
           </button>
-          <button onClick={() => navigate(`/documents/${id}/reindex`)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
+          <button onClick={() => navigate(`/documents_upload/${id}/reindex`)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
             <RefreshCw size={14} /> Re-index
           </button>
         </div>
@@ -88,7 +88,7 @@ export default function DocumentDetailPage() {
       <div className="bg-panel border border-app-border rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-app-border">
           <p className="text-sm font-semibold text-app">Chunks Preview</p>
-          <button onClick={() => navigate(`/documents/${id}/chunks`)} className="text-xs text-emerald-400 hover:underline">
+          <button onClick={() => navigate(`/documents_upload/${id}/chunks`)} className="text-xs text-emerald-400 hover:underline">
             View all {DOC.chunks} chunks
           </button>
         </div>

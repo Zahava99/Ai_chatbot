@@ -18,14 +18,15 @@ const NAV_GROUPS = [
     items: [
       { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
       { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
+      { to: "/admin", icon: Monitor, label: "Admin"},
     ],
   },
   {
-    label: "Content",
+    label: "Document Management (Lectures)",
     items: [
       { to: "/documents", icon: FileText,  label: "Tài liệu" },
       { to: "/subjects",  icon: BookOpen,  label: "Môn học" },
-      { to: "/dataset",   icon: Database,  label: "Dataset" },
+      { to: "/documents_upload",   icon: Database,  label: "Upload Tài Liệu" },
     ],
   },
   {

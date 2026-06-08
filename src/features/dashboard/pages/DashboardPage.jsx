@@ -75,10 +75,10 @@ const RECENT_UPLOADS = [
 ];
 
 const QUICK_ACTIONS = [
-  { icon: Upload,    label: "Upload Document", to: "/documents/upload", accent: "text-blue-400 bg-blue-500/10 hover:bg-blue-500/20" },
+  { icon: Upload,    label: "Upload Document", to: "/documents_upload", accent: "text-blue-400 bg-blue-500/10 hover:bg-blue-500/20" },
   { icon: MessageSquare, label: "New Chat",   to: "/chat",             accent: "text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20" },
   { icon: Target,    label: "Run Benchmark",  to: "/benchmark",        accent: "text-purple-400 bg-purple-500/10 hover:bg-purple-500/20" },
-  { icon: RefreshCw, label: "Re-index All",   to: "/documents",        accent: "text-orange-400 bg-orange-500/10 hover:bg-orange-500/20" },
+  { icon: RefreshCw, label: "Re-index All",   to: "/documents_upload",        accent: "text-orange-400 bg-orange-500/10 hover:bg-orange-500/20" },
 ];
 
 /* ─── sub-components ─────────────────────────────────────────── */
@@ -152,7 +152,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <button
-          onClick={() => navigate("/documents/upload")}
+          onClick={() => navigate("/documents_upload")}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-sm font-medium transition-colors shadow-lg shadow-emerald-900/20"
         >
           <Upload size={15} />
@@ -220,7 +220,7 @@ export default function DashboardPage() {
               key={doc.id}
               onMouseEnter={() => setHoveredRow(doc.id)}
               onMouseLeave={() => setHoveredRow(null)}
-              onClick={() => navigate(`/documents/${doc.id}`)}
+              onClick={() => navigate(`/documents_upload/${doc.id}`)}
               className="grid grid-cols-[1fr_auto_auto_auto_auto] gap-4 items-center px-5 py-3.5 hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors"
             >
               {/* name */}

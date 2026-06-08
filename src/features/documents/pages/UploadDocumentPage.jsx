@@ -77,7 +77,7 @@ export default function UploadDocumentPage() {
       if (progress >= 100) {
         clearInterval(interval);
         setFiles((prev) => prev.map((f) => ({ ...f, status: "done", progress: 100 })));
-        setTimeout(() => navigate("/documents/processing"), 800);
+        setTimeout(() => navigate("/documents_upload/processing"), 800);
       } else {
         setFiles((prev) =>
           prev.map((f) => (f.status === "uploading" ? { ...f, progress: Math.min(Math.round(progress), 99) } : f))

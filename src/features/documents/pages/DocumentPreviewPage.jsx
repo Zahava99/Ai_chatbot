@@ -16,7 +16,7 @@ export default function DocumentPreviewPage() {
       {/* Toolbar */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-app-border bg-panel shrink-0">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate(`/documents/${id}`)} className="text-app opacity-50 hover:opacity-100 transition-opacity">
+          <button onClick={() => navigate(`/documents_upload/${id}`)} className="text-app opacity-50 hover:opacity-100 transition-opacity">
             <X size={16} />
           </button>
           <span className="text-sm font-medium text-app">Lecture_01.pdf</span>

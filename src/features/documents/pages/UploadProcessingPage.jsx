@@ -82,7 +82,7 @@ export default function UploadProcessingPage() {
             <p className="text-sm font-semibold text-app">Processing Complete!</p>
             <p className="text-xs text-app opacity-50">48 chunks created · 48 vectors indexed</p>
             <button
-              onClick={() => navigate("/documents/1")}
+              onClick={() => navigate("/documents_upload/1")}
               className="mt-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
             >
               View Document

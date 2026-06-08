@@ -23,9 +23,9 @@ export default function ChunkViewerPage() {
     <div className="p-6 max-w-5xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-app opacity-40 mb-5">
-        <button onClick={() => navigate("/documents")} className="hover:opacity-80">Documents</button>
+        <button onClick={() => navigate("/documents_upload")} className="hover:opacity-80">Documents</button>
         <ChevronRight size={12} />
-        <button onClick={() => navigate(`/documents/${id}`)} className="hover:opacity-80">Lecture_01.pdf</button>
+        <button onClick={() => navigate(`/documents_upload/${id}`)} className="hover:opacity-80">Lecture_01.pdf</button>
         <ChevronRight size={12} />
         <span className="text-app opacity-70">Chunks</span>
       </div>
