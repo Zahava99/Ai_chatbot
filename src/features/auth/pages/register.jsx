@@ -33,7 +33,7 @@ export default function RegisterPage() {
 
         <AuthCard>
           {/* Tab switcher */}
-          <div className="flex bg-black/5 dark:bg-white/5 rounded-xl p-1 mb-6">
+          {/* <div className="flex bg-black/5 dark:bg-white/5 rounded-xl p-1 mb-6">
             <Link
               to="/login"
               className="flex-1 py-2 rounded-lg text-sm font-medium text-center text-app opacity-50 hover:opacity-100 transition-colors"
@@ -43,10 +43,10 @@ export default function RegisterPage() {
             <span className="flex-1 py-2 rounded-lg text-sm font-medium text-center bg-black/10 dark:bg-white/10 text-app shadow-sm">
               Sign up
             </span>
-          </div>
+          </div> */}
 
           {/* Role selector */}
-          <RoleSelector role={role} setRole={setRole} />
+          {/* <RoleSelector role={role} setRole={setRole} /> */}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
