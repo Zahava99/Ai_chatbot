@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate, Outlet, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, MessageSquare, FileText, BookOpen,
+  LayoutDashboard, MessageSquare, FileText,
   FlaskConical, BarChart3, History, LineChart, Settings,
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
   Sun, Monitor, User, HelpCircle, ExternalLink,
-  Database, GraduationCap, Users,
+  Database, GraduationCap, Users, BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
@@ -21,18 +21,19 @@ const NAV_GROUPS = [
   {
     label: "Main",
     items: [
-      { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-      { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
+      { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["researcher"] },
+      // { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
       { to: "/admin",     icon: Monitor,         label: "Admin",     roles: ["admin"] },
     ],
   },
   {
-    label: "Document Management (Lectures)",
-    roles: ["admin", "lecturer"],
+    label: "Document Management",
     items: [
-      { to: "/documents",        icon: FileText,  label: "Tài liệu" },
-      { to: "/subjects",         icon: BookOpen,  label: "Môn học" },
-      { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu" },
+      { to: "/documents",        icon: FileText,  label: "Tài liệu", roles: ["researcher"]},
+      { to: "/subjects",         icon: BookOpen,  label: "Môn học", roles: ["researcher"] },
+      { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu", roles: ["researcher"] },
+      { to: "/admin/subjects",         icon: BookOpen,  label: "Môn học" },
+      { to: "/admin/documents",         icon: BookOpen,  label: "Tài liệu", roles: ["admin"] },
     ],
   },
   {
@@ -40,13 +41,13 @@ const NAV_GROUPS = [
     roles: ["admin"],
     items: [
       { to: "/admin/users", icon: Users,         label: "Overview" },
-      { to: "/lectures",    icon: GraduationCap, label: "Giảng Viên" },
-      { to: "/students",    icon: Users,         label: "Sinh Viên" },
+      { to: "/admin/lectures",    icon: GraduationCap, label: "Giảng Viên" },
+      { to: "/admin/students",    icon: Users,         label: "Sinh Viên" },
     ],
   },
   {
     label: "Research",
-    roles: ["admin", "lecturer"],
+    roles: ["admin"],
     items: [
       { to: "/research",  icon: FlaskConical, label: "Research Lab" },
       { to: "/benchmark", icon: BarChart3,    label: "Benchmark" },
@@ -55,7 +56,7 @@ const NAV_GROUPS = [
   },
   {
     label: "System",
-    roles: ["admin", "lecturer"],
+    roles: ["admin"],
     items: [
       { to: "/sessions", icon: History,  label: "Sessions" },
       { to: "/settings", icon: Settings, label: "Settings" },

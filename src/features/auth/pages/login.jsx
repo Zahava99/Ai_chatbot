@@ -22,8 +22,21 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      await fetchUser();
-      navigate("/");
+      const user = await fetchUser();
+
+      // Normalise role(s) to a lowercase array
+      const rawRoles = user?.roles ?? user?.role;
+      const roles = rawRoles
+        ? (Array.isArray(rawRoles) ? rawRoles : [rawRoles]).map((r) => r.toLowerCase())
+        : [];
+
+      if (roles.includes("admin")) {
+        navigate("/admin");
+      } else if (roles.includes("researcher")) {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     } finally {

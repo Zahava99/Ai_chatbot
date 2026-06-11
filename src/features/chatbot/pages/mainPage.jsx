@@ -15,7 +15,7 @@ import Header from "@/components/common/header";
 import LoadingScreen from "@/components/common/loadingscreen";
 import { useNotebookStore } from "@/features/chatbot/store/notebookStore";
 import SubjectCard from "@/features/chatbot/components/SubjectCard";
-import { fetchSubjects } from "@/features/chatbot/api/subjectsApi";
+import { fetchSubjects } from "@/api/subjectsApi";
 
 // --- TopBar ---
 function TopBar({ view, setView, sort, setSort, onCreateNew, searchQuery, setSearchQuery }) {
