@@ -1,18 +1,34 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import Header from "@/components/common/header";
 import { AuthBrand, AuthCard, RoleSelector } from "@/features/auth/components/authCommonUI";
+import { login } from "@/features/auth/api/authApi";
+import useAuthStore from "@/stores/useAuthStore";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const fetchUser = useAuthStore((s) => s.fetchUser);
   const [role, setRole] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const handleSubmit = (e) => {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: connect to auth API
-    console.log({ role, email, password });
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password);
+      await fetchUser();
+      navigate("/");
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,10 +97,15 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm transition-colors mt-2"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm transition-colors mt-2"
             >
-              Sign in
+              {loading ? "Signing in…" : "Sign in"}
             </button>
+
+            {error && (
+              <p className="text-center text-sm text-red-500 mt-1">{error}</p>
+            )}
           </form>
 
           {/* Footer link */}

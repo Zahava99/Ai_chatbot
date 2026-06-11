@@ -3,17 +3,16 @@ import {
   Settings,
   Grid3x3,
   LogOut,
-  HelpCircle,
-  MessageSquareWarning,
-  MessageSquare,
-  Globe,
-  ScrollText,
   Moon,
   ChevronRight,
   Check,
+  KeyRound,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
+import useAuthStore from "@/stores/useAuthStore";
+import { clearTokens } from "@/features/auth/api/authUtils";
+import { logout as logoutApi } from "@/features/auth/api/authApi";
 
 export default function Header() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -23,7 +22,16 @@ export default function Header() {
   const dropdownRef = useRef(null);
   const settingsRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const clearUser = useAuthStore((s) => s.clearUser);
+  const user = useAuthStore((s) => s.user);
+
+  // Use first letter of name, fall back to "?"
+  const avatarInitial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : "?";
+
+  const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/onboarding", "/change-password"];
+  const isAuthPage = AUTH_ROUTES.includes(location.pathname);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -39,9 +47,17 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleLogout() {
-    setDropdownOpen(false);
-    navigate("/login");
+  async function handleLogout() {
+    try {
+      await logoutApi();        // POST /api/v1/auth/logout
+    } catch {
+      // server-side revocation failed — still clear locally
+    } finally {
+      clearTokens();            // wipe sessionStorage tokens
+      clearUser();              // clear in-memory store
+      setDropdownOpen(false);
+      navigate("/login");
+    }
   }
 
   // const settingsItems = [
@@ -147,18 +163,34 @@ export default function Header() {
         </button>
 
         {/* Avatar with dropdown */}
+        {!isAuthPage && (
         <div className="relative ml-1" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((p) => !p)}
-            className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+            className="flex items-center gap-2 hover:opacity-90 transition-opacity"
             aria-haspopup="true"
             aria-expanded={dropdownOpen}
           >
-            A
+            <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+              {avatarInitial}
+            </div>
+            {user?.fullName && (
+              <span className="text-sm font-medium text-app max-w-[120px] truncate">
+                {user.fullName}
+              </span>
+            )}
           </button>
 
           {dropdownOpen && (
-            <div className="absolute right-0 mt-2 w-40 rounded-md bg-panel border border-app-border shadow-lg z-50 py-1">
+            <div className="absolute right-0 mt-2 w-44 rounded-md bg-panel border border-app-border shadow-lg z-50 py-1">
+              <button
+                onClick={() => { setDropdownOpen(false); navigate("/change-password"); }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              >
+                <KeyRound size={14} />
+                <span>Change Password</span>
+              </button>
+              <div className="my-1 border-t border-app-border" />
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -169,6 +201,7 @@ export default function Header() {
             </div>
           )}
         </div>
+        )}
       </div>
     </header>
   );

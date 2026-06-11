@@ -10,46 +10,55 @@ import {
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
 import NotificationCenter from "@/features/notifications/NotificationCenter";
+import useAuthStore from "@/stores/useAuthStore";
+import { hasRole } from "@/components/common/RoleGuard";
+import { clearTokens } from "@/features/auth/api/authUtils";
+import { logout as logoutApi } from "@/features/auth/api/authApi";
 
 /* ─── nav structure ──────────────────────────────────────────── */
+// roles: omit = any authenticated user, ["admin"] = admin only, etc.
 const NAV_GROUPS = [
   {
     label: "Main",
     items: [
       { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
       { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
-      { to: "/admin", icon: Monitor, label: "Admin"},
+      { to: "/admin",     icon: Monitor,         label: "Admin",     roles: ["admin"] },
     ],
   },
   {
     label: "Document Management (Lectures)",
+    roles: ["admin", "lecturer"],
     items: [
-      { to: "/documents", icon: FileText,  label: "Tài liệu" },
-      { to: "/subjects",  icon: BookOpen,  label: "Môn học" },
-      { to: "/documents_upload",   icon: Database,  label: "Upload Tài Liệu" },
+      { to: "/documents",        icon: FileText,  label: "Tài liệu" },
+      { to: "/subjects",         icon: BookOpen,  label: "Môn học" },
+      { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu" },
     ],
   },
   {
     label: "User Management",
+    roles: ["admin"],
     items: [
-      { to: "/admin/users", icon: Users,          label: "Overview" },
-      { to: "/lectures",    icon: GraduationCap,  label: "Giảng Viên" },
-      { to: "/students",    icon: Users,          label: "Sinh Viên" },
+      { to: "/admin/users", icon: Users,         label: "Overview" },
+      { to: "/lectures",    icon: GraduationCap, label: "Giảng Viên" },
+      { to: "/students",    icon: Users,         label: "Sinh Viên" },
     ],
   },
   {
     label: "Research",
+    roles: ["admin", "lecturer"],
     items: [
-      { to: "/research",   icon: FlaskConical, label: "Research Lab" },
-      { to: "/benchmark",  icon: BarChart3,    label: "Benchmark" },
-      { to: "/analytics",  icon: LineChart,    label: "Analytics" },
+      { to: "/research",  icon: FlaskConical, label: "Research Lab" },
+      { to: "/benchmark", icon: BarChart3,    label: "Benchmark" },
+      { to: "/analytics", icon: LineChart,    label: "Analytics" },
     ],
   },
   {
     label: "System",
+    roles: ["admin", "lecturer"],
     items: [
-      { to: "/sessions",  icon: History,   label: "Sessions" },
-      { to: "/settings",  icon: Settings,  label: "Settings" },
+      { to: "/sessions", icon: History,  label: "Sessions" },
+      { to: "/settings", icon: Settings, label: "Settings" },
     ],
   },
 ];
@@ -112,6 +121,22 @@ export default function AppLayout() {
   const dropdownRef    = useRef(null);
   const themePickerRef = useRef(null);
   const notifRef       = useRef(null);
+
+  const user      = useAuthStore((s) => s.user);
+  const clearUser = useAuthStore((s) => s.clearUser);
+
+  // Filter nav groups and items by the current user's role
+  // Support both `roles` (array from /me API) and legacy `role` field
+  const userRoles = user?.roles ?? user?.role;
+  const visibleGroups = NAV_GROUPS
+    .filter((g) => hasRole(userRoles, g.roles))
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => hasRole(userRoles, item.roles)),
+    }))
+    .filter((g) => g.items.length > 0);
+
+  const avatarInitial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : "?";
 
   /* close on outside click */
   useEffect(() => {
@@ -183,7 +208,7 @@ export default function AppLayout() {
 
         {/* ── Nav groups ── */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 flex flex-col gap-4">
-          {NAV_GROUPS.map((group) => (
+          {visibleGroups.map((group) => (
             <div key={group.label}>
               {/* group label */}
               {!collapsed && (
@@ -316,11 +341,11 @@ export default function AppLayout() {
                 aria-expanded={dropdownOpen}
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                  A
+                  {avatarInitial}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-xs font-medium text-app leading-none">Admin</p>
-                  <p className="text-[10px] text-app opacity-40 leading-none mt-0.5">admin@edu.vn</p>
+                  <p className="text-xs font-medium text-app leading-none">{user?.fullName ?? "User"}</p>
+                  <p className="text-[10px] text-app opacity-40 leading-none mt-0.5">{user?.email ?? ""}</p>
                 </div>
                 <ChevronRight
                   size={12}
@@ -334,11 +359,11 @@ export default function AppLayout() {
                   <div className="px-4 py-3 border-b border-app-border">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
-                        A
+                        {avatarInitial}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-app truncate">Admin</p>
-                        <p className="text-xs text-app opacity-40 truncate">admin@edu.vn</p>
+                        <p className="text-sm font-semibold text-app truncate">{user?.fullName ?? "User"}</p>
+                        <p className="text-xs text-app opacity-40 truncate">{user?.email ?? ""}</p>
                       </div>
                     </div>
                   </div>
@@ -362,7 +387,15 @@ export default function AppLayout() {
 
                   <div className="border-t border-app-border py-1">
                     <button
-                      onClick={() => { setDropdownOpen(false); navigate("/login"); }}
+                      onClick={async () => {
+                        setDropdownOpen(false);
+                        try { await logoutApi(); } catch { /* ignore */ }
+                        finally {
+                          clearTokens();
+                          clearUser();
+                          navigate("/login");
+                        }
+                      }}
                       className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/5 transition-colors"
                     >
                       <LogOut size={14} className="shrink-0" />

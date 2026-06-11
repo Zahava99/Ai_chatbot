@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import NotebookHeader from "@/components/common/notebookHeader";
+import Header from "@/components/common/header";
 import SourcesPanel from "./sourcesPanel";
 import ChatBotPanel from "./chatBotPanel";
 // TEMPORARY: notebookStore replaced by chatbotStore for simulation
@@ -27,7 +27,7 @@ export default function NotebookPage() {
 
   return (
     <div className="flex flex-col h-screen bg-notebook text-app overflow-hidden">
-      <NotebookHeader />
+      <Header />
 
       <div className="flex-1 overflow-hidden px-4 pb-4 pt-3">
         <div className="flex gap-2 h-full">

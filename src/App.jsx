@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { ThemeProvider } from "@/context/ThemeContext";
+import useAuthStore from "@/stores/useAuthStore";
 
 // ── Layout ──
 import AppLayout from "@/components/layout/AppLayout";
+import RoleGuard from "@/components/common/RoleGuard";
 
 // ── Auth ──
 import SplashScreen       from "@/features/auth/pages/splash";
@@ -10,6 +13,7 @@ import LoginPage          from "@/features/auth/pages/login";
 import RegisterPage       from "@/features/auth/pages/register";
 import ForgotPasswordPage from "@/features/auth/pages/forgotPassword";
 import OnboardingPage     from "@/features/auth/pages/onboarding";
+import ChangePasswordPage from "@/features/auth/pages/changePassword";
 
 // ── Dashboard ──
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
@@ -63,6 +67,27 @@ import MainPage     from "@/features/chatbot/pages/mainPage";
 import NotebookPage from "@/features/chatbot/pages/notebookPage";
 
 function App() {
+  const fetchUser = useAuthStore((s) => s.fetchUser);
+  const authReady = useAuthStore((s) => s.authReady);
+
+  // On app boot, rehydrate the user from GET /api/v1/auth/me.
+  // We intentionally don't render routes until this settles so that
+  // RoleGuard never sees a null user mid-flight and incorrectly redirects.
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  if (!authReady) {
+    // Minimal full-screen spinner while we confirm the session
+    return (
+      <ThemeProvider>
+        <div className="flex h-screen items-center justify-center bg-app">
+          <div className="w-8 h-8 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+        </div>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
       <BrowserRouter>
@@ -73,6 +98,7 @@ function App() {
           <Route path="/register"       element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/onboarding"     element={<OnboardingPage />} />
+          <Route path="/change-password" element={<ChangePasswordPage />} />
 
           {/* ── Legacy notebook routes ── */}
           <Route path="/"        element={<MainPage />} />
@@ -80,52 +106,61 @@ function App() {
 
           {/* ── App (with sidebar layout) ── */}
           <Route element={<AppLayout />}>
-            <Route path="/dashboard"  element={<DashboardPage />} />
 
-            {/* Documents */}
-            <Route path="/documents"                    element={<DocumentListPage />} />
-            {/* <Route path="/documents/upload"             element={<UploadDocumentPage />} /> */}
-            <Route path="/documents_upload" element={<UploadDocumentPage/>}/>
-            <Route path="/documents_upload/processing"         element={<UploadProcessingPage />} />
-            <Route path="/documents_upload/:id"                element={<DocumentDetailPage />} />
-            <Route path="/documents_upload/:id/preview"        element={<DocumentPreviewPage />} />
-            <Route path="/documents_upload/:id/chunks"         element={<ChunkViewerPage />} />
-            <Route path="/documents_upload/:id/reindex"        element={<ReindexPage />} />
+            {/* ── Accessible by all authenticated roles ── */}
+            <Route element={<RoleGuard />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/chat"      element={<ChatPage />} />
+            </Route>
 
-            {/* Subjects */}
-            <Route path="/subjects"     element={<SubjectListPage />} />
-            <Route path="/subjects/:id" element={<SubjectDetailPage />} />
+            {/* ── Lecturer + Admin only ── */}
+            <Route element={<RoleGuard allowed={["admin", "lecturer"]} />}>
+              {/* Documents */}
+              <Route path="/documents"                           element={<DocumentListPage />} />
+              <Route path="/documents_upload"                    element={<UploadDocumentPage />} />
+              <Route path="/documents_upload/processing"         element={<UploadProcessingPage />} />
+              <Route path="/documents_upload/:id"                element={<DocumentDetailPage />} />
+              <Route path="/documents_upload/:id/preview"        element={<DocumentPreviewPage />} />
+              <Route path="/documents_upload/:id/chunks"         element={<ChunkViewerPage />} />
+              <Route path="/documents_upload/:id/reindex"        element={<ReindexPage />} />
 
-            {/* Chat */}
-            <Route path="/chat" element={<ChatPage />} />
+              {/* Subjects */}
+              <Route path="/subjects"     element={<SubjectListPage />} />
+              <Route path="/subjects/:id" element={<SubjectDetailPage />} />
 
-            {/* Sessions */}
-            <Route path="/sessions" element={<SessionsPage />} />
+              {/* Sessions */}
+              <Route path="/sessions" element={<SessionsPage />} />
 
-            {/* Research */}
-            <Route path="/research" element={<ResearchDashboardPage />} />
+              {/* Research */}
+              <Route path="/research" element={<ResearchDashboardPage />} />
 
-            {/* Benchmark */}
-            <Route path="/benchmark"             element={<BenchmarkConfigPage />} />
-            <Route path="/benchmark/embeddings"  element={<EmbeddingComparisonPage />} />
-            <Route path="/benchmark/chunks"      element={<ChunkStrategyPage />} />
-            <Route path="/benchmark/finetuned"   element={<FineTunedVsRAGPage />} />
-            <Route path="/benchmark/results"     element={<RAGASResultPage />} />
-            <Route path="/benchmark/history"     element={<ExperimentHistoryPage />} />
+              {/* Benchmark */}
+              <Route path="/benchmark"             element={<BenchmarkConfigPage />} />
+              <Route path="/benchmark/embeddings"  element={<EmbeddingComparisonPage />} />
+              <Route path="/benchmark/chunks"      element={<ChunkStrategyPage />} />
+              <Route path="/benchmark/finetuned"   element={<FineTunedVsRAGPage />} />
+              <Route path="/benchmark/results"     element={<RAGASResultPage />} />
+              <Route path="/benchmark/history"     element={<ExperimentHistoryPage />} />
 
-            {/* Analytics */}
-            <Route path="/analytics" element={<AnalyticsPage />} />
+              {/* Analytics */}
+              <Route path="/analytics" element={<AnalyticsPage />} />
 
-            {/* Dataset */}
-            <Route path="/dataset"            element={<TestsetManagementPage />} />
-            <Route path="/dataset/evaluation" element={<EvaluationResultPage />} />
+              {/* Dataset */}
+              <Route path="/dataset"            element={<TestsetManagementPage />} />
+              <Route path="/dataset/evaluation" element={<EvaluationResultPage />} />
 
-            {/* Admin */}
-            <Route path="/admin"           element={<AdminDashboardPage />} />
-            <Route path="/settings"        element={<SystemSettingsPage />} />
-            <Route path="/admin/users"     element={<UserManagementPage />} />
-            <Route path="/lectures"        element={<LecturerManagementPage />} />
-            <Route path="/students"        element={<StudentManagementPage />} />
+              {/* Settings */}
+              <Route path="/settings" element={<SystemSettingsPage />} />
+            </Route>
+
+            {/* ── Admin only ── */}
+            <Route element={<RoleGuard allowed={["admin"]} />}>
+              <Route path="/admin"       element={<AdminDashboardPage />} />
+              <Route path="/admin/users" element={<UserManagementPage />} />
+              <Route path="/lectures"    element={<LecturerManagementPage />} />
+              <Route path="/students"    element={<StudentManagementPage />} />
+            </Route>
+
           </Route>
 
           {/* Fallback */}
