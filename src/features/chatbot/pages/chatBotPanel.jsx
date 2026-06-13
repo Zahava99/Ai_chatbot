@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MoreVertical, ArrowRight, Bot, User, AlertCircle, FileText, Loader2 } from "lucide-react";
 import { useChatbotStore } from "@/features/chatbot/store/chatbotStore";
-import { askQuestion } from "@/features/chatbot/api/askApi";
-import { fetchConversationMessages } from "@/features/chatbot/api/conversationsApi";
+import { fetchSessionMessages, sendSessionMessage, createChatSession } from "@/features/chatbot/api/sessionApi";
 import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = [
@@ -78,13 +77,13 @@ function SourceBadge({ source }) {
 // Render answer text with [Source N] replaced by inline badges
 // ---------------------------------------------------------------------------
 function AnswerText({ text, sources }) {
-  // Split on [Source N] or [Sources N, M, ...] patterns
-  const parts = text.split(/(\[Source[s]?\s[\d,\s]+\])/gi);
+  // Split on [Source N], [Sources N, M, ...], or [Nguồn N] patterns
+  const parts = text.split(/(\[(?:Source[s]?|Nguồn)\s[\d,\s]+\])/gi);
 
   return (
     <>
       {parts.map((part, i) => {
-        const match = part.match(/\[Source[s]?\s([\d,\s]+)\]/i);
+        const match = part.match(/\[(?:Source[s]?|Nguồn)\s([\d,\s]+)\]/i);
         if (!match) return <span key={i}>{part}</span>;
 
         // Extract all numbers from the match, e.g. "1, 2" → [1, 2]
@@ -117,6 +116,8 @@ function AnswerText({ text, sources }) {
 // ---------------------------------------------------------------------------
 function MessageBubble({ message }) {
   const isUser = message.role === "user";
+  const sources = message.sources ?? [];
+
   return (
     <div className={cn("flex gap-3 mb-5", isUser ? "flex-row-reverse" : "flex-row")}>
       {/* Avatar */}
@@ -134,25 +135,36 @@ function MessageBubble({ message }) {
       </div>
 
       {/* Bubble */}
-      <div
-        className={cn(
-          "max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
-          isUser
-            ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-tr-sm"
-            : message.error
-            ? "bg-red-500/10 border border-red-500/20 text-red-400 rounded-tl-sm"
-            : "bg-black/5 dark:bg-white/8 text-app rounded-tl-sm"
-        )}
-      >
-        {isUser || message.error ? (
-          <>
-            {message.error && (
-              <AlertCircle size={13} className="inline mr-1.5 mb-0.5 opacity-70" />
-            )}
-            {message.text}
-          </>
-        ) : (
-          <AnswerText text={message.text} sources={message.sources ?? []} />
+      <div className={cn("max-w-[75%] flex flex-col gap-0", isUser ? "items-end" : "items-start")}>
+        <div
+          className={cn(
+            "px-4 py-2.5 rounded-2xl text-sm leading-relaxed",
+            isUser
+              ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-tr-sm"
+              : message.error
+              ? "bg-red-500/10 border border-red-500/20 text-red-400 rounded-tl-sm"
+              : "bg-black/5 dark:bg-white/8 text-app rounded-tl-sm"
+          )}
+        >
+          {isUser || message.error ? (
+            <>
+              {message.error && (
+                <AlertCircle size={13} className="inline mr-1.5 mb-0.5 opacity-70" />
+              )}
+              {message.text}
+            </>
+          ) : (
+            <AnswerText text={message.text} sources={sources} />
+          )}
+        </div>
+
+        {/* Citations list below the bubble */}
+        {!isUser && !message.error && sources.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2 px-1">
+            {sources.map((source) => (
+              <SourceBadge key={source.index} source={source} />
+            ))}
+          </div>
         )}
       </div>
     </div>
@@ -180,19 +192,18 @@ function TypingIndicator() {
 // ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
-export default function ChatBotPanel({ subjectId, subjectCode }) {
+export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated }) {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [conversationId, setConversationId] = useState(null);
   const textareaRef = useRef(null);
   const bottomRef = useRef(null);
+  const skipNextFetchRef = useRef(false);
 
   const activeSessionId = useChatbotStore((s) => s.activeSessionId);
   const sessions = useChatbotStore((s) => s.sessions);
-  const createSession = useChatbotStore((s) => s.createSession);
-  const promoteSessionId = useChatbotStore((s) => s.promoteSessionId);
+  const setActiveSession = useChatbotStore((s) => s.setActiveSession);
 
   // Resolve active session title for the header
   const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
@@ -201,14 +212,14 @@ export default function ChatBotPanel({ subjectId, subjectCode }) {
   useEffect(() => {
     if (!activeSessionId) {
       setMessages([]);
-      setConversationId(null);
       return;
     }
 
-    // Only seed conversationId if this is a real backend UUID, not a locally
-    // generated session ID (e.g. "VNR202-session-1749123456789").
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeSessionId);
-    setConversationId(isUUID ? activeSessionId : null);
+    // Skip fetch if we just created this session (messages are already in state)
+    if (skipNextFetchRef.current) {
+      skipNextFetchRef.current = false;
+      return;
+    }
 
     // Check the store first (simulated / locally created sessions have messages)
     const storeSession = sessions.find((s) => s.id === activeSessionId);
@@ -217,8 +228,10 @@ export default function ChatBotPanel({ subjectId, subjectCode }) {
       return;
     }
 
-    // For local new sessions with no messages yet, just show the welcome screen
-    if (!isUUID) {
+    // For locally created sessions that haven't been sent to the backend yet,
+    // just show the welcome screen (they use a prefix like "subjectId-session-")
+    const isLocalPlaceholder = String(activeSessionId).includes("-session-");
+    if (isLocalPlaceholder) {
       setMessages([]);
       return;
     }
@@ -228,7 +241,7 @@ export default function ChatBotPanel({ subjectId, subjectCode }) {
     setMessages([]);
     setLoadingHistory(true);
 
-    fetchConversationMessages(activeSessionId)
+    fetchSessionMessages(activeSessionId)
       .then((msgs) => {
         if (!cancelled) setMessages(msgs);
       })
@@ -259,13 +272,7 @@ export default function ChatBotPanel({ subjectId, subjectCode }) {
     const trimmed = (text ?? input).trim();
     if (!trimmed || isTyping) return;
 
-    // Capture the session ID before any async work
     let currentSessionId = activeSessionId;
-
-    // Ensure there is an active session
-    if (!currentSessionId) {
-      currentSessionId = createSession(subjectId ?? "unknown", trimmed.slice(0, 50));
-    }
 
     const userMsg = {
       id: `msg-${Date.now()}-u`,
@@ -278,16 +285,31 @@ export default function ChatBotPanel({ subjectId, subjectCode }) {
     setIsTyping(true);
 
     try {
-      const { answer, sources, conversationId: returnedId } = await askQuestion(subjectId, trimmed, conversationId);
+      // If no active session, create one first with the question as title
+      if (!currentSessionId) {
+        const { id } = await createChatSession(subjectId, trimmed.slice(0, 100));
+        currentSessionId = id;
+        skipNextFetchRef.current = true;
+        setActiveSession(currentSessionId);
 
-      // On the first message of a new chat the backend returns a real UUID.
-      // Store it so subsequent messages thread correctly, and promote the
-      // local placeholder session ID to the real one.
-      if (returnedId) {
-        setConversationId(returnedId);
-        const isLocalId = !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentSessionId);
-        if (isLocalId) promoteSessionId(currentSessionId, returnedId);
+        // Notify parent so the sources panel shows the new session immediately
+        onSessionCreated?.({
+          id: currentSessionId,
+          subjectId,
+          title: trimmed.slice(0, 100),
+          date: new Date().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }),
+          time: new Date().toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        });
       }
+
+      const { answer, sources } = await sendSessionMessage(currentSessionId, trimmed);
 
       const botMsg = {
         id: `msg-${Date.now()}-b`,

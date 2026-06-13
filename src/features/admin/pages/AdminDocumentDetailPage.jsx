@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FileText, Cpu, Calendar, Hash, Eye, RefreshCw, ChevronRight } from "lucide-react";
+import {
+  FileText, Cpu, Calendar, Hash, Eye, RefreshCw, ChevronRight,
+} from "lucide-react";
 import { getDocumentById, reindexDocument } from "@/api/documentApi";
 
 const STATUS_STYLES = {
@@ -23,7 +25,7 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function DocumentDetailPage() {
+export default function AdminDocumentDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [doc, setDoc] = useState(null);
@@ -69,19 +71,25 @@ export default function DocumentDetailPage() {
 
   const metaRows = [
     { icon: FileText, label: "File name", value: doc.originalFileName || "No info" },
-    // { icon: Hash, label: "Chunk count", value: doc.chunkCount ? `${doc.chunkCount} chunks` : "No info" },
-    // { icon: Cpu, label: "Embedding model", value: doc.embeddingModel || "No info" },
+    { icon: Hash, label: "Chunk count", value: doc.chunkCount ? `${doc.chunkCount} chunks` : "No info" },
+    { icon: Cpu, label: "Embedding model", value: doc.embeddingModel || "No info" },
     { icon: Calendar, label: "Upload date", value: formatDate(doc.createdAtUtc) },
     { icon: Calendar, label: "Indexed date", value: formatDate(doc.indexedAtUtc) },
-    // { icon: Hash, label: "Chunk size", value: doc.chunkSize ? `${doc.chunkSize} tokens` : "No info" },
-    // { icon: Hash, label: "Overlap", value: doc.overlap ? `${doc.overlap} tokens` : "No info" },
+    { icon: Hash, label: "Chunk size", value: doc.chunkSize ? `${doc.chunkSize} tokens` : "No info" },
+    { icon: Hash, label: "Overlap", value: doc.overlap ? `${doc.overlap} tokens` : "No info" },
   ];
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-app opacity-40 mb-5">
-        <button onClick={() => navigate("/documents")} className="hover:opacity-80">Documents</button>
+        <button onClick={() => navigate("/admin")} className="hover:opacity-80">
+          Admin
+        </button>
+        <ChevronRight size={12} />
+        <button onClick={() => navigate("/admin/documents")} className="hover:opacity-80">
+          Documents
+        </button>
         <ChevronRight size={12} />
         <span className="text-app opacity-70">{doc.title || doc.originalFileName}</span>
       </div>
@@ -110,10 +118,17 @@ export default function DocumentDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => navigate(`/documents_upload/${id}/preview`)} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
+          <button
+            onClick={() => navigate(`/admin/documents/${id}/preview`)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors"
+          >
             <Eye size={14} /> Preview
           </button>
-          <button onClick={handleReindex} disabled={reindexing} className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors disabled:opacity-40">
+          <button
+            onClick={handleReindex}
+            disabled={reindexing}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors disabled:opacity-40"
+          >
             <RefreshCw size={14} className={reindexing ? "animate-spin" : ""} /> {reindexing ? "Re-indexing..." : "Re-index"}
           </button>
         </div>
@@ -140,7 +155,10 @@ export default function DocumentDetailPage() {
         <div className="flex items-center justify-between px-5 py-3 border-b border-app-border">
           <p className="text-sm font-semibold text-app">Chunks Preview</p>
           {doc.chunkCount && (
-            <button onClick={() => navigate(`/documents_upload/${id}/chunks`)} className="text-xs text-emerald-400 hover:underline">
+            <button
+              onClick={() => navigate(`/admin/documents/${id}/chunks`)}
+              className="text-xs text-emerald-400 hover:underline"
+            >
               View all {doc.chunkCount} chunks
             </button>
           )}

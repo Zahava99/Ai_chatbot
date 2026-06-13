@@ -1,54 +1,65 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate, Outlet, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, MessageSquare, FileText, BookOpen,
+  LayoutDashboard, MessageSquare, FileText,
   FlaskConical, BarChart3, History, LineChart, Settings,
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
   Sun, Monitor, User, HelpCircle, ExternalLink,
-  Database, GraduationCap, Users,
+  Database, GraduationCap, Users, BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
 import NotificationCenter from "@/features/notifications/NotificationCenter";
+import useAuthStore from "@/stores/useAuthStore";
+import { hasRole } from "@/components/common/RoleGuard";
+import { clearTokens, isTokenExpired, ensureFreshToken } from "@/features/auth/api/authUtils";
+import { logout as logoutApi } from "@/features/auth/api/authApi";
 
 /* ─── nav structure ──────────────────────────────────────────── */
+// roles: omit = any authenticated user, ["admin"] = admin only, etc.
 const NAV_GROUPS = [
   {
     label: "Main",
     items: [
-      { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-      { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
+      { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["researcher"] },
+      // { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
+      { to: "/admin",     icon: Monitor,         label: "Admin",     roles: ["admin"], end: true },
     ],
   },
   {
-    label: "Content",
+    label: "Document Management",
     items: [
-      { to: "/documents", icon: FileText,  label: "Tài liệu" },
-      { to: "/subjects",  icon: BookOpen,  label: "Môn học" },
-      { to: "/dataset",   icon: Database,  label: "Dataset" },
+      { to: "/documents",        icon: FileText,  label: "Tài liệu", roles: ["researcher"]},
+      { to: "/subjects",         icon: BookOpen,  label: "Môn học", roles: ["researcher"] },
+      { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu", roles: ["researcher"] },
+      { to: "/admin/subjects",         icon: BookOpen,  label: "Môn học", roles: ["admin"] },
+      { to: "/admin/documents",         icon: BookOpen,  label: "Tài liệu", roles: ["admin"] },
     ],
   },
   {
     label: "User Management",
+    roles: ["admin"],
     items: [
-      { to: "/admin/users", icon: Users,          label: "Overview" },
-      { to: "/lectures",    icon: GraduationCap,  label: "Giảng Viên" },
-      { to: "/students",    icon: Users,          label: "Sinh Viên" },
+      { to: "/admin/users", icon: Users,         label: "Overview" },
+      { to: "/admin/lectures",    icon: GraduationCap, label: "Giảng Viên" },
+      { to: "/admin/students",    icon: Users,         label: "Sinh Viên" },
     ],
   },
   {
     label: "Research",
+    roles: ["admin"],
     items: [
-      { to: "/research",   icon: FlaskConical, label: "Research Lab" },
-      { to: "/benchmark",  icon: BarChart3,    label: "Benchmark" },
-      { to: "/analytics",  icon: LineChart,    label: "Analytics" },
+      { to: "/research",  icon: FlaskConical, label: "Research Lab" },
+      { to: "/benchmark", icon: BarChart3,    label: "Benchmark" },
+      { to: "/analytics", icon: LineChart,    label: "Analytics" },
     ],
   },
   {
     label: "System",
+    roles: ["admin"],
     items: [
-      { to: "/sessions",  icon: History,   label: "Sessions" },
-      { to: "/settings",  icon: Settings,  label: "Settings" },
+      { to: "/sessions", icon: History,  label: "Sessions" },
+      { to: "/settings", icon: Settings, label: "Settings" },
     ],
   },
 ];
@@ -60,10 +71,11 @@ const THEME_OPTIONS = [
 ];
 
 /* ─── NavItem ────────────────────────────────────────────────── */
-function NavItem({ to, icon: Icon, label, badge, collapsed }) {
+function NavItem({ to, icon: Icon, label, badge, collapsed, end }) {
   return (
     <NavLink
       to={to}
+      end={end}
       title={collapsed ? label : undefined}
       className={({ isActive }) =>
         cn(
@@ -111,6 +123,41 @@ export default function AppLayout() {
   const dropdownRef    = useRef(null);
   const themePickerRef = useRef(null);
   const notifRef       = useRef(null);
+
+  const user      = useAuthStore((s) => s.user);
+  const clearUser = useAuthStore((s) => s.clearUser);
+
+  // ── Periodic token freshness check ──
+  useEffect(() => {
+    const CHECK_INTERVAL_MS = 30 * 1000; // every 30 seconds
+
+    const interval = setInterval(async () => {
+      if (!isTokenExpired()) return; // still valid, nothing to do
+
+      const freshToken = await ensureFreshToken();
+      if (!freshToken) {
+        // refresh failed — session is dead, log out
+        clearTokens();
+        clearUser();
+        navigate("/login");
+      }
+    }, CHECK_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [clearUser, navigate]);
+
+  // Filter nav groups and items by the current user's role
+  // Support both `roles` (array from /me API) and legacy `role` field
+  const userRoles = user?.roles ?? user?.role;
+  const visibleGroups = NAV_GROUPS
+    .filter((g) => hasRole(userRoles, g.roles))
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => hasRole(userRoles, item.roles)),
+    }))
+    .filter((g) => g.items.length > 0);
+
+  const avatarInitial = user?.fullName ? user.fullName.charAt(0).toUpperCase() : "?";
 
   /* close on outside click */
   useEffect(() => {
@@ -182,7 +229,7 @@ export default function AppLayout() {
 
         {/* ── Nav groups ── */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 flex flex-col gap-4">
-          {NAV_GROUPS.map((group) => (
+          {visibleGroups.map((group) => (
             <div key={group.label}>
               {/* group label */}
               {!collapsed && (
@@ -315,11 +362,11 @@ export default function AppLayout() {
                 aria-expanded={dropdownOpen}
               >
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                  A
+                  {avatarInitial}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-xs font-medium text-app leading-none">Admin</p>
-                  <p className="text-[10px] text-app opacity-40 leading-none mt-0.5">admin@edu.vn</p>
+                  <p className="text-xs font-medium text-app leading-none">{user?.fullName ?? "User"}</p>
+                  <p className="text-[10px] text-app opacity-40 leading-none mt-0.5">{user?.email ?? ""}</p>
                 </div>
                 <ChevronRight
                   size={12}
@@ -333,11 +380,11 @@ export default function AppLayout() {
                   <div className="px-4 py-3 border-b border-app-border">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
-                        A
+                        {avatarInitial}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-app truncate">Admin</p>
-                        <p className="text-xs text-app opacity-40 truncate">admin@edu.vn</p>
+                        <p className="text-sm font-semibold text-app truncate">{user?.fullName ?? "User"}</p>
+                        <p className="text-xs text-app opacity-40 truncate">{user?.email ?? ""}</p>
                       </div>
                     </div>
                   </div>
@@ -361,7 +408,15 @@ export default function AppLayout() {
 
                   <div className="border-t border-app-border py-1">
                     <button
-                      onClick={() => { setDropdownOpen(false); navigate("/login"); }}
+                      onClick={async () => {
+                        setDropdownOpen(false);
+                        try { await logoutApi(); } catch { /* ignore */ }
+                        finally {
+                          clearTokens();
+                          clearUser();
+                          navigate("/login");
+                        }
+                      }}
                       className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/5 transition-colors"
                     >
                       <LogOut size={14} className="shrink-0" />

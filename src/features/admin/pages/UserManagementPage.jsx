@@ -1,18 +1,46 @@
-import { useState } from "react";
-import { Search, MoreVertical, Shield, User, Trash2, Ban, Activity } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, MoreVertical, Shield, User, Trash2, Ban, Activity, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchAdminUsers } from "@/features/admin/api/adminApi";
 
-const USERS = [
-  { id: 1, name: "Nguyễn Văn An", email: "an.nguyen@edu.vn", role: "admin", status: "active", lastActive: "May 26, 2026", questions: 142 },
-  { id: 2, name: "Trần Thị Bình", email: "binh.tran@edu.vn", role: "student", status: "active", lastActive: "May 26, 2026", questions: 89 },
-  { id: 3, name: "Lê Văn Cường", email: "cuong.le@edu.vn", role: "student", status: "active", lastActive: "May 25, 2026", questions: 67 },
-  { id: 4, name: "Phạm Thị Dung", email: "dung.pham@edu.vn", role: "student", status: "inactive", lastActive: "May 20, 2026", questions: 23 },
-  { id: 5, name: "Hoàng Văn Em", email: "em.hoang@edu.vn", role: "student", status: "banned", lastActive: "May 10, 2026", questions: 5 },
-  { id: 6, name: "Vũ Thị Phương", email: "phuong.vu@edu.vn", role: "student", status: "active", lastActive: "May 26, 2026", questions: 198 },
-];
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+/** Map API flags → display status */
+function resolveStatus(user) {
+  if (user.isBanned) return "banned";
+  return user.isActive ? "active" : "inactive";
+}
+
+/** Resolve role from roles array */
+function resolveRole(user) {
+  if (Array.isArray(user.roles)) {
+    if (user.roles.includes("Admin")) return "admin";
+    // Treat any non-Admin, non-Student role (Lecturer, Researcher, etc.) as lecturer
+    const isStudent = user.roles.includes("Student");
+    if (!isStudent && user.roles.length > 0) return "lecturer";
+  }
+  return "student";
+}
+
+/** Format ISO date → readable string */
+function fmtDate(iso) {
+  if (!iso) return "Never";
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+}
+
+/** Get last initial from full name */
+function initials(name = "") {
+  const parts = name.trim().split(" ");
+  return parts[parts.length - 1]?.[0]?.toUpperCase() ?? "?";
+}
+
+// ─── constants ───────────────────────────────────────────────────────────────
 
 const ROLE_STYLES = {
   admin: "text-purple-400 bg-purple-500/10",
+  lecturer: "text-orange-400 bg-orange-500/10",
   student: "text-blue-400 bg-blue-500/10",
 };
 
@@ -22,12 +50,58 @@ const STATUS_STYLES = {
   banned: "text-red-400 bg-red-500/10",
 };
 
+const AVATAR_COLORS = [
+  "bg-sky-500", "bg-indigo-500", "bg-pink-500", "bg-amber-500",
+  "bg-teal-500", "bg-rose-500", "bg-cyan-500", "bg-lime-600",
+];
+
+// ─── component ───────────────────────────────────────────────────────────────
+
 export default function UserManagementPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
-  const [users, setUsers] = useState(USERS);
   const [openMenu, setOpenMenu] = useState(null);
   const [activityUser, setActivityUser] = useState(null);
 
+  // ── fetch users from API ───────────────────────────────────────────────────
+  useEffect(() => {
+    setLoading(true);
+    fetchAdminUsers()
+      .then(({ items }) => {
+        const mapped = items.map((u) => ({
+          id: u.id,
+          name: u.fullName ?? "—",
+          email: u.email ?? "—",
+          role: resolveRole(u),
+          status: resolveStatus(u),
+          lastActive: fmtDate(u.lastLoginUtc),
+          questions: u.questions ?? 0,
+        }));
+        setUsers(mapped);
+      })
+      .catch((err) => {
+        console.error("[UserMgmt]", err);
+        setError("Failed to load users.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // ── local actions (optimistic) ─────────────────────────────────────────────
+  function handleBan(id) {
+    setUsers((prev) =>
+      prev.map((u) => u.id === id ? { ...u, status: u.status === "banned" ? "active" : "banned" } : u)
+    );
+    setOpenMenu(null);
+  }
+
+  function handleDelete(id) {
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+    setOpenMenu(null);
+  }
+
+  // ── derived ────────────────────────────────────────────────────────────────
   const filtered = users.filter((u) =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
     u.email.toLowerCase().includes(search.toLowerCase())
@@ -38,7 +112,9 @@ export default function UserManagementPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-app">User Management</h1>
-          <p className="text-sm text-app opacity-50 mt-0.5">{users.length} users total</p>
+          <p className="text-sm text-app opacity-50 mt-0.5">
+            {loading ? "Loading…" : `${users.length} users total`}
+          </p>
         </div>
       </div>
 
@@ -50,7 +126,9 @@ export default function UserManagementPage() {
           { label: "Admins", value: users.filter((u) => u.role === "admin").length, color: "text-purple-400" },
         ].map(({ label, value, color }) => (
           <div key={label} className="bg-panel border border-app-border rounded-xl p-4 text-center">
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            <p className={`text-2xl font-bold ${color}`}>
+              {loading ? <span className="opacity-30">—</span> : value}
+            </p>
             <p className="text-xs text-app opacity-50 mt-1">{label}</p>
           </div>
         ))}
@@ -73,12 +151,47 @@ export default function UserManagementPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-app-border">
-            {filtered.map((u) => (
+
+            {/* loading */}
+            {loading && (
+              <tr>
+                <td colSpan={6} className="px-5 py-12 text-center">
+                  <div className="flex items-center justify-center gap-2 text-sm text-app opacity-40">
+                    <Loader2 size={15} className="animate-spin" />
+                    Loading users…
+                  </div>
+                </td>
+              </tr>
+            )}
+
+            {/* error */}
+            {!loading && error && (
+              <tr>
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-red-400 opacity-70">
+                  {error}
+                </td>
+              </tr>
+            )}
+
+            {/* empty */}
+            {!loading && !error && filtered.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-app opacity-30">
+                  No users found.
+                </td>
+              </tr>
+            )}
+
+            {/* rows */}
+            {!loading && !error && filtered.map((u, idx) => (
               <tr key={u.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
-                      {u.name[0]}
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold shrink-0",
+                      AVATAR_COLORS[idx % AVATAR_COLORS.length]
+                    )}>
+                      {initials(u.name)}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-app">{u.name}</p>
@@ -114,11 +227,14 @@ export default function UserManagementPage() {
                       >
                         <Activity size={12} /> Activity Logs
                       </button>
-                      <button className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-yellow-400 hover:bg-yellow-500/5 transition-colors">
-                        <Ban size={12} /> Ban User
+                      <button
+                        onClick={() => handleBan(u.id)}
+                        className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-yellow-400 hover:bg-yellow-500/5 transition-colors"
+                      >
+                        <Ban size={12} /> {u.status === "banned" ? "Unban User" : "Ban User"}
                       </button>
                       <button
-                        onClick={() => { setUsers((prev) => prev.filter((x) => x.id !== u.id)); setOpenMenu(null); }}
+                        onClick={() => handleDelete(u.id)}
                         className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-400 hover:bg-red-500/5 transition-colors"
                       >
                         <Trash2 size={12} /> Delete
@@ -132,31 +248,25 @@ export default function UserManagementPage() {
         </table>
       </div>
 
+      {/* Footer */}
+      {!loading && filtered.length > 0 && (
+        <p className="text-xs text-app opacity-30 mt-3 text-right">
+          Showing {filtered.length} of {users.length} users
+        </p>
+      )}
+
       {/* Activity modal */}
       {activityUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-panel border border-app-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm font-semibold text-app">Activity Logs — {activityUser.name}</p>
-              <button onClick={() => setActivityUser(null)} className="text-app opacity-40 hover:opacity-80">✕</button>
+              <button onClick={() => setActivityUser(null)} className="text-app opacity-40 hover:opacity-80 transition-opacity">✕</button>
             </div>
             <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
-              {[
-                { action: "Asked question", detail: "What is gradient descent?", time: "May 26, 10:32" },
-                { action: "Uploaded document", detail: "Lecture_01.pdf", time: "May 26, 09:15" },
-                { action: "Asked question", detail: "Explain backpropagation", time: "May 25, 14:20" },
-                { action: "Created session", detail: "New chat session", time: "May 25, 14:18" },
-                { action: "Logged in", detail: "—", time: "May 25, 14:17" },
-              ].map((log, i) => (
-                <div key={i} className="flex items-start gap-3 py-2 border-b border-app-border last:border-0">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-app">{log.action}</p>
-                    <p className="text-xs text-app opacity-40">{log.detail}</p>
-                  </div>
-                  <span className="text-xs text-app opacity-30 shrink-0">{log.time}</span>
-                </div>
-              ))}
+              <p className="text-xs text-app opacity-30 text-center py-6">
+                Activity log data is not available from the current API.
+              </p>
             </div>
             <button onClick={() => setActivityUser(null)} className="w-full mt-4 py-2.5 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
               Close

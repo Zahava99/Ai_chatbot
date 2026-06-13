@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText, Search, LayoutGrid, List, Upload, Filter,
+  FileText, Search, LayoutGrid, List, Filter,
   ChevronDown, MoreVertical, Eye, Trash2, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,22 +9,31 @@ import { getDocuments, deleteDocument } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
 
 const STATUS_STYLES = {
-  indexed: "text-emerald-400 bg-emerald-500/10",
+  indexed:    "text-emerald-400 bg-emerald-500/10",
   processing: "text-yellow-400 bg-yellow-500/10",
-  error: "text-red-400 bg-red-500/10",
-  failed: "text-red-400 bg-red-500/10",
+  error:      "text-red-400 bg-red-500/10",
+  failed:     "text-red-400 bg-red-500/10",
 };
 
 function DocMenu({ onView, onReindex, onDelete }) {
   return (
     <div className="absolute right-0 top-full mt-1 w-40 bg-panel border border-app-border rounded-xl shadow-xl z-50 py-1">
-      <button onClick={onView} className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+      <button
+        onClick={onView}
+        className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+      >
         <Eye size={14} /> View
       </button>
-      <button onClick={onReindex} className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+      <button
+        onClick={onReindex}
+        className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+      >
         <RefreshCw size={14} /> Re-index
       </button>
-      <button onClick={onDelete} className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-500/5 transition-colors">
+      <button
+        onClick={onDelete}
+        className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-500/5 transition-colors"
+      >
         <Trash2 size={14} /> Delete
       </button>
     </div>
@@ -44,17 +53,17 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-export default function DocumentListPage() {
-  const [view, setView] = useState("table");
-  const [search, setSearch] = useState("");
-  const [openMenu, setOpenMenu] = useState(null);
+export default function AdminDocumentListPage() {
+  const [view, setView]           = useState("table");
+  const [search, setSearch]       = useState("");
+  const [openMenu, setOpenMenu]   = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
-  const [docs, setDocs] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [docs, setDocs]           = useState([]);
+  const [subjects, setSubjects]   = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
+  const [page, setPage]           = useState(1);
+  const [loading, setLoading]     = useState(true);
+  const [deleting, setDeleting]   = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,9 +101,10 @@ export default function DocumentListPage() {
     }
   };
 
-  const filtered = docs.filter((d) =>
-    (d.originalFileName || "").toLowerCase().includes(search.toLowerCase()) ||
-    (d.title || "").toLowerCase().includes(search.toLowerCase())
+  const filtered = docs.filter(
+    (d) =>
+      (d.originalFileName || "").toLowerCase().includes(search.toLowerCase()) ||
+      (d.title || "").toLowerCase().includes(search.toLowerCase())
   );
 
   /** Look up subject code by subjectId */
@@ -109,15 +119,10 @@ export default function DocumentListPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-app">Tài liệu</h1>
+          <p className="text-xs text-app opacity-40 uppercase tracking-widest mb-1">Admin</p>
+          <h1 className="text-xl font-semibold text-app">Documents</h1>
           <p className="text-sm text-app opacity-50 mt-0.5">{totalCount} documents total</p>
         </div>
-        <button
-          onClick={() => navigate("/documents_upload")}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
-        >
-          <Upload size={15} /> Upload
-        </button>
       </div>
 
       {/* Toolbar */}
@@ -138,10 +143,16 @@ export default function DocumentListPage() {
           Sort <ChevronDown size={14} />
         </button>
         <div className="flex items-center bg-black/10 dark:bg-white/10 rounded-lg p-0.5">
-          <button onClick={() => setView("table")} className={cn("p-1.5 rounded-md transition-colors text-app", view === "table" ? "bg-black/10 dark:bg-white/20" : "opacity-50 hover:opacity-100")}>
+          <button
+            onClick={() => setView("table")}
+            className={cn("p-1.5 rounded-md transition-colors text-app", view === "table" ? "bg-black/10 dark:bg-white/20" : "opacity-50 hover:opacity-100")}
+          >
             <List size={15} />
           </button>
-          <button onClick={() => setView("grid")} className={cn("p-1.5 rounded-md transition-colors text-app", view === "grid" ? "bg-black/10 dark:bg-white/20" : "opacity-50 hover:opacity-100")}>
+          <button
+            onClick={() => setView("grid")}
+            className={cn("p-1.5 rounded-md transition-colors text-app", view === "grid" ? "bg-black/10 dark:bg-white/20" : "opacity-50 hover:opacity-100")}
+          >
             <LayoutGrid size={15} />
           </button>
         </div>
@@ -194,8 +205,8 @@ export default function DocumentListPage() {
                     </button>
                     {openMenu === doc.id && (
                       <DocMenu
-                        onView={() => { navigate(`/documents_upload/${doc.id}`); setOpenMenu(null); }}
-                        onReindex={() => { navigate(`/documents_upload/${doc.id}/reindex`); setOpenMenu(null); }}
+                        onView={() => { navigate(`/admin/documents/${doc.id}`); setOpenMenu(null); }}
+                        onReindex={() => { navigate(`/admin/documents/${doc.id}/reindex`); setOpenMenu(null); }}
                         onDelete={() => { setDeleteModal(doc); setOpenMenu(null); }}
                       />
                     )}
@@ -211,8 +222,10 @@ export default function DocumentListPage() {
       {view === "grid" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((doc) => (
-            <div key={doc.id} className="bg-panel border border-app-border rounded-xl p-4 hover:border-black/25 dark:hover:border-white/25 transition-colors cursor-pointer group"
-              onClick={() => navigate(`/documents_upload/${doc.id}`)}
+            <div
+              key={doc.id}
+              onClick={() => navigate(`/admin/documents/${doc.id}`)}
+              className="bg-panel border border-app-border rounded-xl p-4 hover:border-black/25 dark:hover:border-white/25 transition-colors cursor-pointer group"
             >
               <div className="flex items-start justify-between mb-3">
                 <FileText size={28} className="text-app opacity-40" />
@@ -238,13 +251,22 @@ export default function DocumentListPage() {
             </div>
             <h3 className="text-base font-semibold text-app mb-1">Delete Document</h3>
             <p className="text-sm text-app opacity-50 mb-5">
-              This will permanently delete <strong className="text-app opacity-80">{deleteModal.originalFileName}</strong> and all its vector embeddings. This action cannot be undone.
+              This will permanently delete{" "}
+              <strong className="text-app opacity-80">{deleteModal.originalFileName}</strong> and all its
+              vector embeddings. This action cannot be undone.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteModal(null)} className="flex-1 py-2.5 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
+              <button
+                onClick={() => setDeleteModal(null)}
+                className="flex-1 py-2.5 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors"
+              >
                 Cancel
               </button>
-              <button onClick={handleDelete} disabled={deleting} className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors disabled:opacity-50">
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors disabled:opacity-50"
+              >
                 {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>

@@ -9,7 +9,7 @@ const CHUNKS = Array.from({ length: 12 }, (_, i) => ({
   content: `This chunk covers section ${i + 1} of the document. Machine learning algorithms build a model based on sample data, known as training data, in order to make predictions or decisions without being explicitly programmed to do so. The algorithm learns from the data and improves its performance over time through experience.`,
 }));
 
-export default function ChunkViewerPage() {
+export default function AdminChunkViewerPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -23,9 +23,11 @@ export default function ChunkViewerPage() {
     <div className="p-6 max-w-5xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-app opacity-40 mb-5">
-        <button onClick={() => navigate("/documents_upload")} className="hover:opacity-80">Documents</button>
+        <button onClick={() => navigate("/admin")} className="hover:opacity-80">Admin</button>
         <ChevronRight size={12} />
-        <button onClick={() => navigate(`/documents_upload/${id}`)} className="hover:opacity-80">Lecture_01.pdf</button>
+        <button onClick={() => navigate("/admin/documents")} className="hover:opacity-80">Documents</button>
+        <ChevronRight size={12} />
+        <button onClick={() => navigate(`/admin/documents/${id}`)} className="hover:opacity-80">Lecture_01.pdf</button>
         <ChevronRight size={12} />
         <span className="text-app opacity-70">Chunks</span>
       </div>
@@ -48,7 +50,11 @@ export default function ChunkViewerPage() {
           <div
             key={chunk.id}
             onClick={() => setSelected(selected === chunk.id ? null : chunk.id)}
-            className={`bg-panel border rounded-xl p-4 cursor-pointer transition-all ${selected === chunk.id ? "border-emerald-500 bg-emerald-500/5" : "border-app-border hover:border-black/25 dark:hover:border-white/25"}`}
+            className={`bg-panel border rounded-xl p-4 cursor-pointer transition-all ${
+              selected === chunk.id
+                ? "border-emerald-500 bg-emerald-500/5"
+                : "border-app-border hover:border-black/25 dark:hover:border-white/25"
+            }`}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
