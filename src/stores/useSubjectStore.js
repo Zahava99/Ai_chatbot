@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getSubjects, getChapters, createSubject, updateSubject, createChapter } from "@/features/subjects/api/subjectApis";
+import { getSubjects, getChapters, createSubject, updateSubject, createChapter } from "@/api/subjectApi";
 
 // Stable empty array — reused as the fallback so selectors never return
 // a new reference when a key is missing from chaptersBySubject.

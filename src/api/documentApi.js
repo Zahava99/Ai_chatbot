@@ -66,7 +66,7 @@ export async function getDocuments(page = 1, pageSize = 20) {
 
   const response = await fetch(url, {
     method: "GET",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
   });
 
   if (!response.ok) {
@@ -86,7 +86,7 @@ export async function getDocumentById(id) {
 
   const response = await fetch(url, {
     method: "GET",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
   });
 
   if (!response.ok) {
@@ -106,7 +106,7 @@ export async function reindexDocument(id) {
 
   const response = await fetch(url, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
   });
 
   if (!response.ok) {
@@ -126,7 +126,7 @@ export async function deleteDocument(id) {
 
   const response = await fetch(url, {
     method: "DELETE",
-    headers: getAuthHeaders(),
+    headers: await getAuthHeaders(),
   });
 
   if (!response.ok) {

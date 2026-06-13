@@ -146,7 +146,7 @@ export default function DashboardPage() {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs text-app opacity-40 mb-1 uppercase tracking-widest">Dashboard</p>
-          <h1 className="text-2xl font-bold text-app leading-tight">{greeting}, Lecture 👋</h1>
+          <h1 className="text-2xl font-bold text-app leading-tight">{greeting}, Lecturer 👋</h1>
           <p className="text-sm text-app opacity-50 mt-1">
             Here's an overview of your EduChat workspace.
           </p>

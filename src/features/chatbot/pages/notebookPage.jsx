@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 
 export default function NotebookPage() {
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
+  const [newlyCreatedSession, setNewlyCreatedSession] = useState(null);
   const location = useLocation();
 
   // Subject the student navigated into (set by handleSubjectClick in mainPage)
@@ -24,6 +25,11 @@ export default function NotebookPage() {
   useEffect(() => {
     setActiveSession(null);
   }, [subjectId, setActiveSession]);
+
+  // Called by ChatBotPanel when it creates a new session on first message
+  const handleSessionCreated = (session) => {
+    setNewlyCreatedSession(session);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-notebook text-app overflow-hidden">
@@ -45,12 +51,17 @@ export default function NotebookPage() {
               activeSessionId={activeSessionId}
               onSelectSession={setActiveSession}
               subjectId={subjectId}
+              newlyCreatedSession={newlyCreatedSession}
             />
           </div>
 
           {/* Chat panel */}
           <div className="flex-1 flex flex-col rounded-xl bg-panel border border-app-border overflow-hidden min-w-0">
-            <ChatBotPanel subjectId={subjectId} subjectCode={subjectCode} />
+            <ChatBotPanel
+              subjectId={subjectId}
+              subjectCode={subjectCode}
+              onSessionCreated={handleSessionCreated}
+            />
           </div>
 
         </div>

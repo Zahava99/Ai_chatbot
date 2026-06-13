@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument } from "@/api/documentApi";
+import { getSubjects } from "@/api/subjectApi";
 
 const STATUS_STYLES = {
   indexed:    "text-emerald-400 bg-emerald-500/10",
@@ -58,6 +59,7 @@ export default function AdminDocumentListPage() {
   const [openMenu, setOpenMenu]   = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
   const [docs, setDocs]           = useState([]);
+  const [subjects, setSubjects]   = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage]           = useState(1);
   const [loading, setLoading]     = useState(true);
@@ -67,6 +69,12 @@ export default function AdminDocumentListPage() {
   useEffect(() => {
     fetchDocuments();
   }, [page]);
+
+  useEffect(() => {
+    getSubjects()
+      .then((data) => setSubjects(data || []))
+      .catch((err) => console.error("Failed to load subjects:", err));
+  }, []);
 
   const fetchDocuments = () => {
     setLoading(true);
@@ -98,6 +106,13 @@ export default function AdminDocumentListPage() {
       (d.originalFileName || "").toLowerCase().includes(search.toLowerCase()) ||
       (d.title || "").toLowerCase().includes(search.toLowerCase())
   );
+
+  /** Look up subject code by subjectId */
+  function getSubjectCode(subjectId) {
+    if (!subjectId) return "—";
+    const subject = subjects.find((s) => s.id === subjectId);
+    return subject?.code ?? "—";
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -149,16 +164,16 @@ export default function AdminDocumentListPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-app-border">
-                {["Title", "File Name", "Type", "Size", "Status", "Date", ""].map((h) => (
+                {["Title", "File Name", "Subject", "Type", "Size", "Status", "Date", ""].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs text-app opacity-40 font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-app-border">
               {loading ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-app opacity-50">Loading...</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">Loading...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-app opacity-50">No documents found</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">No documents found</td></tr>
               ) : filtered.map((doc) => (
                 <tr key={doc.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
                   <td className="px-4 py-3">
@@ -168,6 +183,11 @@ export default function AdminDocumentListPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-app opacity-60">{doc.originalFileName}</td>
+                  <td className="px-4 py-3">
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium text-sky-400 bg-sky-500/10">
+                      {getSubjectCode(doc.subjectId)}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-app opacity-50 text-xs uppercase">{doc.fileType}</td>
                   <td className="px-4 py-3 text-app opacity-60">{formatFileSize(doc.sizeBytes)}</td>
                   <td className="px-4 py-3">
@@ -215,6 +235,7 @@ export default function AdminDocumentListPage() {
               </div>
               <p className="text-sm font-medium text-app truncate">{doc.title}</p>
               <p className="text-xs text-app opacity-40 mt-1">{doc.originalFileName} · {formatFileSize(doc.sizeBytes)}</p>
+              <p className="text-xs text-sky-400 mt-1">{getSubjectCode(doc.subjectId)}</p>
               <p className="text-xs text-app opacity-30 mt-0.5">{formatDate(doc.createdAtUtc)}</p>
             </div>
           ))}

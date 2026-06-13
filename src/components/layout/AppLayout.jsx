@@ -12,7 +12,7 @@ import { useTheme } from "@/context/ThemeContext";
 import NotificationCenter from "@/features/notifications/NotificationCenter";
 import useAuthStore from "@/stores/useAuthStore";
 import { hasRole } from "@/components/common/RoleGuard";
-import { clearTokens } from "@/features/auth/api/authUtils";
+import { clearTokens, isTokenExpired, ensureFreshToken } from "@/features/auth/api/authUtils";
 import { logout as logoutApi } from "@/features/auth/api/authApi";
 
 /* ─── nav structure ──────────────────────────────────────────── */
@@ -23,7 +23,7 @@ const NAV_GROUPS = [
     items: [
       { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["researcher"] },
       // { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
-      { to: "/admin",     icon: Monitor,         label: "Admin",     roles: ["admin"] },
+      { to: "/admin",     icon: Monitor,         label: "Admin",     roles: ["admin"], end: true },
     ],
   },
   {
@@ -32,7 +32,7 @@ const NAV_GROUPS = [
       { to: "/documents",        icon: FileText,  label: "Tài liệu", roles: ["researcher"]},
       { to: "/subjects",         icon: BookOpen,  label: "Môn học", roles: ["researcher"] },
       { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu", roles: ["researcher"] },
-      { to: "/admin/subjects",         icon: BookOpen,  label: "Môn học" },
+      { to: "/admin/subjects",         icon: BookOpen,  label: "Môn học", roles: ["admin"] },
       { to: "/admin/documents",         icon: BookOpen,  label: "Tài liệu", roles: ["admin"] },
     ],
   },
@@ -71,10 +71,11 @@ const THEME_OPTIONS = [
 ];
 
 /* ─── NavItem ────────────────────────────────────────────────── */
-function NavItem({ to, icon: Icon, label, badge, collapsed }) {
+function NavItem({ to, icon: Icon, label, badge, collapsed, end }) {
   return (
     <NavLink
       to={to}
+      end={end}
       title={collapsed ? label : undefined}
       className={({ isActive }) =>
         cn(
@@ -125,6 +126,25 @@ export default function AppLayout() {
 
   const user      = useAuthStore((s) => s.user);
   const clearUser = useAuthStore((s) => s.clearUser);
+
+  // ── Periodic token freshness check ──
+  useEffect(() => {
+    const CHECK_INTERVAL_MS = 30 * 1000; // every 30 seconds
+
+    const interval = setInterval(async () => {
+      if (!isTokenExpired()) return; // still valid, nothing to do
+
+      const freshToken = await ensureFreshToken();
+      if (!freshToken) {
+        // refresh failed — session is dead, log out
+        clearTokens();
+        clearUser();
+        navigate("/login");
+      }
+    }, CHECK_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [clearUser, navigate]);
 
   // Filter nav groups and items by the current user's role
   // Support both `roles` (array from /me API) and legacy `role` field

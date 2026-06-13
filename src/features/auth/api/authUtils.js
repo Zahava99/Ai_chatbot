@@ -47,3 +47,52 @@ export function getRefreshToken() {
 export function getAccessTokenExpiry() {
   return sessionStorage.getItem(TOKEN_KEYS.ACCESS_TOKEN_EXPIRES);
 }
+
+/**
+ * Check whether the current access token is expired or about to expire.
+ * Uses a 60-second buffer so we refresh slightly before actual expiry.
+ * @returns {boolean}
+ */
+export function isTokenExpired() {
+  const expiry = getAccessTokenExpiry();
+  if (!expiry) return true;
+
+  const expiresAt = new Date(expiry).getTime();
+  const now = Date.now();
+  const BUFFER_MS = 60 * 1000; // refresh 60s before expiry
+
+  return now >= expiresAt - BUFFER_MS;
+}
+
+/**
+ * Ensures a fresh access token is available.
+ * If the token is expired/expiring, it calls the refresh endpoint.
+ * Returns the valid access token, or null if refresh fails.
+ *
+ * @returns {Promise<string | null>}
+ */
+let refreshPromise = null;
+
+export async function ensureFreshToken() {
+  const token = getAccessToken();
+  if (!token) return null;
+
+  if (!isTokenExpired()) return token;
+
+  // Deduplicate concurrent refresh calls
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const { refreshToken } = await import("@/features/auth/api/authApi");
+        const data = await refreshToken();
+        return data.accessToken;
+      } catch {
+        return null;
+      } finally {
+        refreshPromise = null;
+      }
+    })();
+  }
+
+  return refreshPromise;
+}

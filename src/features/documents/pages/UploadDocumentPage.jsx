@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Upload, FileText, X, CheckCircle2, Loader2, AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { uploadDocument } from "@/api/documentApi";
-import { getSubjects, getChapters } from "@/features/subjects/api/subjectApis";
+import { getSubjects, getChapters } from "@/api/subjectApi";
 
 const ACCEPTED = [".pdf", ".docx", ".pptx"];
 

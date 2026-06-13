@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Search,
@@ -9,13 +9,12 @@ import {
   BookOpen,
   RefreshCw,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Header from "@/components/common/header";
 import LoadingScreen from "@/components/common/loadingscreen";
 import { useNotebookStore } from "@/features/chatbot/store/notebookStore";
 import SubjectCard from "@/features/chatbot/components/SubjectCard";
-import { fetchSubjects } from "@/api/subjectsApi";
+import { getSubjects } from "@/api/subjectApi";
 
 // --- TopBar ---
 function TopBar({ view, setView, sort, setSort, onCreateNew, searchQuery, setSearchQuery }) {
@@ -113,7 +112,17 @@ function useApiSubjects() {
     setApiLoading(true);
     setApiError(null);
     try {
-      const mapped = await fetchSubjects();
+      const data = await getSubjects();
+      const mapped = (Array.isArray(data) ? data : []).map((s) => ({
+        id: s.id,
+        code: s.code,
+        name: s.name,
+        description: s.description,
+        chapterCount: s.chapterCount,
+        documentCount: s.documentCount,
+        semester: null,
+        pinned: false,
+      }));
       setApiSubjects(mapped);
     } catch (err) {
       setApiError(err.message);
@@ -133,18 +142,18 @@ export default function MainPage() {
   const [view, setView] = useState("grid");
   const [sort, setSort] = useState("recent");
   const [loading, setLoading] = useState(false);
-  const [selectedSemester, setSelectedSemester] = useState(null); // null = All
+  // const [selectedSemester, setSelectedSemester] = useState(null); // semester UI commented out until available
   const [searchQuery, setSearchQuery] = useState("");
   const [pinnedSubjectIds, setPinnedSubjectIds] = useState(new Set());
-  const [collapsedSemesters, setCollapsedSemesters] = useState(new Set());
+  // const [collapsedSemesters, setCollapsedSemesters] = useState(new Set());
 
-  const toggleSemesterCollapse = (sem) => {
-    setCollapsedSemesters((prev) => {
-      const next = new Set(prev);
-      next.has(sem) ? next.delete(sem) : next.add(sem);
-      return next;
-    });
-  };
+  // const toggleSemesterCollapse = (sem) => {
+  //   setCollapsedSemesters((prev) => {
+  //     const next = new Set(prev);
+  //     next.has(sem) ? next.delete(sem) : next.add(sem);
+  //     return next;
+  //   });
+  // };
 
   const notebooks = useNotebookStore((s) => s.notebooks);
   const addNotebook = useNotebookStore((s) => s.addNotebook);
@@ -183,7 +192,10 @@ export default function MainPage() {
   const handleDelete = (id) => deleteNotebook(id);
   const handleTogglePin = (id) => togglePin(id);
   const handleSubjectClick = (subject) => {
-    navigate("/notebook", { state: { subjectId: subject.id, subjectCode: subject.code } });
+    setLoading(true);
+    navigate("/notebook", {
+      state: { subjectId: subject.id, subjectCode: subject.code },
+    });
   };
 
   const handleToggleSubjectPin = (id) => {
@@ -195,7 +207,6 @@ export default function MainPage() {
   };
 
   const pinnedSubjects = subjects.filter((s) => s.pinned);
-  const unpinnedSubjects = subjects.filter((s) => !s.pinned);
 
   const q = searchQuery.trim().toLowerCase();
 
@@ -278,8 +289,8 @@ export default function MainPage() {
                 </button>
               </h2>
 
-              {/* Semester filter bar */}
-              <div className="flex items-center gap-1.5 flex-wrap mb-6">
+              {/* Semester filter bar — commented out until semester data is available */}
+              {/* <div className="flex items-center gap-1.5 flex-wrap mb-6">
                 <button
                   onClick={() => setSelectedSemester(null)}
                   className={cn(
@@ -305,7 +316,7 @@ export default function MainPage() {
                     Semester {sem}
                   </button>
                 ))}
-              </div>
+              </div> */}
 
               {apiError ? (
                 <div className="flex items-center gap-3 text-sm text-red-500/80 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
@@ -334,20 +345,10 @@ export default function MainPage() {
                   ))}
                 </div>
               ) : (() => {
-                // Semesters to display: if a filter is active show only that one, else show all 8
-                const semestersToShow = selectedSemester !== null
-                  ? [selectedSemester]
-                  : Array.from({ length: 8 }, (_, i) => i + 1);
+                // Flat list of subjects (no semester grouping until semester data is available)
+                const filteredSubjects = searchFilteredUnpinned.filter((s) => !s.pinned);
 
-                // Build lookup of unpinned subjects by semester (with search applied)
-                const bySemester = semestersToShow.reduce((acc, sem) => {
-                  acc[sem] = searchFilteredUnpinned.filter((s) => s.semester === sem);
-                  return acc;
-                }, {});
-
-                // If searching and nothing matches at all, show a global empty message
-                const totalMatches = semestersToShow.reduce((n, sem) => n + bySemester[sem].length, 0);
-                if (q && totalMatches === 0) {
+                if (q && filteredSubjects.length === 0) {
                   return (
                     <p className="text-sm text-app opacity-30 italic">
                       No results for "{searchQuery}"
@@ -355,60 +356,34 @@ export default function MainPage() {
                   );
                 }
 
-                return (
-                  <div className="flex flex-col gap-8">
-                    {semestersToShow.map((sem) => (
-                      <div key={sem}>
-                        {/* Semester label — always shown when viewing All; hidden when a specific semester is selected */}
-                        {selectedSemester === null && (
-                          <div className="flex items-center gap-3 mb-4">
-                            <button
-                              onClick={() => toggleSemesterCollapse(sem)}
-                              className="flex items-center gap-2 text-xs font-semibold text-app opacity-40 uppercase tracking-widest hover:opacity-70 transition-opacity"
-                            >
-                              <ChevronDown
-                                size={13}
-                                className={cn(
-                                  "transition-transform duration-200",
-                                  collapsedSemesters.has(sem) && "-rotate-90"
-                                )}
-                              />
-                              Semester {sem}
-                            </button>
-                            <div className="flex-1 h-px bg-app-border opacity-50" />
-                          </div>
-                        )}
+                if (filteredSubjects.length === 0) {
+                  return (
+                    <p className="text-sm text-app opacity-30 italic">No Subjects</p>
+                  );
+                }
 
-                        {!collapsedSemesters.has(sem) && (
-                          bySemester[sem].length === 0 ? (
-                            <p className="text-sm text-app opacity-30 italic">No Subjects</p>
-                          ) : view === "grid" ? (
-                            <div className="flex flex-wrap gap-4">
-                              {bySemester[sem].map((subject) => (
-                                <SubjectCard
-                                  key={subject.id}
-                                  subject={subject}
-                                  view={view}
-                                  onClick={handleSubjectClick}
-                                  onTogglePin={handleToggleSubjectPin}
-                                />
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="flex flex-col gap-2 max-w-2xl">
-                              {bySemester[sem].map((subject) => (
-                                <SubjectCard
-                                  key={subject.id}
-                                  subject={subject}
-                                  view={view}
-                                  onClick={handleSubjectClick}
-                                  onTogglePin={handleToggleSubjectPin}
-                                />
-                              ))}
-                            </div>
-                          )
-                        )}
-                      </div>
+                return view === "grid" ? (
+                  <div className="flex flex-wrap gap-4">
+                    {filteredSubjects.map((subject) => (
+                      <SubjectCard
+                        key={subject.id}
+                        subject={subject}
+                        view={view}
+                        onClick={handleSubjectClick}
+                        onTogglePin={handleToggleSubjectPin}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2 max-w-2xl">
+                    {filteredSubjects.map((subject) => (
+                      <SubjectCard
+                        key={subject.id}
+                        subject={subject}
+                        view={view}
+                        onClick={handleSubjectClick}
+                        onTogglePin={handleToggleSubjectPin}
+                      />
                     ))}
                   </div>
                 );

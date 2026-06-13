@@ -101,6 +101,44 @@ export async function getMe() {
 }
 
 /**
+ * POST /api/v1/auth/refresh
+ * Exchanges the current refresh token for a new access/refresh token pair.
+ * Updates sessionStorage with the new tokens on success.
+ *
+ * @returns {Promise<{ accessToken: string, refreshToken: string, accessTokenExpiresAtUtc: string }>}
+ */
+export async function refreshToken() {
+  const currentRefreshToken = getRefreshToken();
+
+  if (!currentRefreshToken) {
+    throw new Error("No refresh token available");
+  }
+
+  const response = await fetch(`${AUTH_BASE}/refresh`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ refreshToken: currentRefreshToken }),
+  });
+
+  if (!response.ok) {
+    let message = `Token refresh failed (${response.status})`;
+    try {
+      const err = await response.json();
+      message = err.detail ?? err.message ?? message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  const data = await response.json();
+  storeTokens(data);
+  return data;
+}
+
+/**
  * POST /api/v1/auth/logout
  * Invalidates the session on the server. Requires the current access token.
  * The refresh token is sent in the body so the server can revoke it too.

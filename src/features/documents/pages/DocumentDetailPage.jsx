@@ -69,19 +69,19 @@ export default function DocumentDetailPage() {
 
   const metaRows = [
     { icon: FileText, label: "File name", value: doc.originalFileName || "No info" },
-    { icon: Hash, label: "Chunk count", value: doc.chunkCount ? `${doc.chunkCount} chunks` : "No info" },
-    { icon: Cpu, label: "Embedding model", value: doc.embeddingModel || "No info" },
+    // { icon: Hash, label: "Chunk count", value: doc.chunkCount ? `${doc.chunkCount} chunks` : "No info" },
+    // { icon: Cpu, label: "Embedding model", value: doc.embeddingModel || "No info" },
     { icon: Calendar, label: "Upload date", value: formatDate(doc.createdAtUtc) },
     { icon: Calendar, label: "Indexed date", value: formatDate(doc.indexedAtUtc) },
-    { icon: Hash, label: "Chunk size", value: doc.chunkSize ? `${doc.chunkSize} tokens` : "No info" },
-    { icon: Hash, label: "Overlap", value: doc.overlap ? `${doc.overlap} tokens` : "No info" },
+    // { icon: Hash, label: "Chunk size", value: doc.chunkSize ? `${doc.chunkSize} tokens` : "No info" },
+    // { icon: Hash, label: "Overlap", value: doc.overlap ? `${doc.overlap} tokens` : "No info" },
   ];
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-xs text-app opacity-40 mb-5">
-        <button onClick={() => navigate("/documents_upload")} className="hover:opacity-80">Documents</button>
+        <button onClick={() => navigate("/documents")} className="hover:opacity-80">Documents</button>
         <ChevronRight size={12} />
         <span className="text-app opacity-70">{doc.title || doc.originalFileName}</span>
       </div>
