@@ -7,21 +7,10 @@ import {
   CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDocuments } from "@/features/documents/hooks/useDocuments";
 
-/* ─── mock data ─────────────────────────────────────────────── */
-const STATS = [
-  {
-    icon: FileText,
-    label: "Tổng tài liệu",
-    value: "24",
-    sub: "8 subjects",
-    delta: "+3",
-    deltaLabel: "this week",
-    up: true,
-    accent: "text-blue-400",
-    bg: "bg-blue-500/10",
-    ring: "ring-blue-500/20",
-  },
+/* ─── mock data (non-document stats remain static) ──────────── */
+const STATIC_STATS = [
   {
     icon: MessageSquare,
     label: "Tổng câu hỏi",
@@ -127,6 +116,62 @@ function StatusBadge({ status }) {
   );
 }
 
+/* ─── Total Documents card (live API) ───────────────────────── */
+function TotalDocumentsCard() {
+  const { totalCount, loading, error, refetch } = useDocuments({ pageSize: 1 });
+
+  return (
+    <div className="bg-panel border border-app-border rounded-2xl p-5 flex flex-col gap-4 hover:ring-2 ring-blue-500/20 transition-all duration-150">
+      {/* top row */}
+      <div className="flex items-start justify-between">
+        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
+          <FileText size={20} className="text-blue-400" />
+        </div>
+
+        {/* status badge */}
+        {loading ? (
+          <div className="flex items-center gap-1.5 text-xs text-app opacity-30 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
+            <Loader2 size={11} className="animate-spin" /> Fetching...
+          </div>
+        ) : error ? (
+          <button
+            onClick={refetch}
+            title="Retry"
+            className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full hover:bg-red-500/20 transition-colors"
+          >
+            <RefreshCw size={11} /> Retry
+          </button>
+        ) : (
+          <div className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full text-emerald-400 bg-emerald-500/10">
+            <TrendingUp size={11} /> Live
+          </div>
+        )}
+      </div>
+
+      {/* value */}
+      <div>
+        {loading ? (
+          <div className="h-8 w-16 rounded-lg bg-black/10 dark:bg-white/10 animate-pulse" />
+        ) : error ? (
+          <p className="text-2xl font-bold text-red-400 leading-none tracking-tight">—</p>
+        ) : (
+          <p className="text-2xl font-bold text-app leading-none tracking-tight">
+            {totalCount?.toLocaleString() ?? "—"}
+          </p>
+        )}
+        <p className="text-xs text-app opacity-40 mt-1.5">Tổng tài liệu</p>
+      </div>
+
+      {/* footer */}
+      <p className="text-xs text-app opacity-30 border-t border-app-border pt-3">
+        {error
+          ? <span className="text-red-400">Không thể tải dữ liệu</span>
+          : "GET /api/v1/documents · totalCount"}
+      </p>
+    </div>
+  );
+}
+
 /* ─── page ───────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -162,7 +207,10 @@ export default function DashboardPage() {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {STATS.map((s) => <StatCard key={s.label} {...s} />)}
+        {/* Tổng tài liệu — live from API */}
+        <TotalDocumentsCard />
+        {/* Remaining stats — static mock */}
+        {STATIC_STATS.map((s) => <StatCard key={s.label} {...s} />)}
       </div>
 
       {/* ── Quick actions ── */}
