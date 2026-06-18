@@ -106,3 +106,37 @@ export async function createChapter(subjectId, payload) {
   });
   return handleResponse(response, "Failed to create chapter");
 }
+
+
+/**
+ * POST /api/v1/subjects/:subjectId/instructors
+ * Assigns an instructor to a subject.
+ *
+ * @param {number|string} subjectId
+ * @param {number|string} userId - The user ID of the instructor to assign
+ * @returns {Promise<object|null>}
+ */
+export async function assignInstructor(subjectId, userId) {
+  const response = await fetch(`${SUBJECTS_BASE}/${subjectId}/instructors`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ userId }),
+  });
+  return handleResponse(response, "Failed to assign instructor");
+}
+
+/**
+ * DELETE /api/v1/subjects/:subjectId/instructors/:userId
+ * Unassigns an instructor from a subject.
+ *
+ * @param {number|string} subjectId
+ * @param {number|string} userId - The user ID of the instructor to unassign
+ * @returns {Promise<object|null>}
+ */
+export async function unassignInstructor(subjectId, userId) {
+  const response = await fetch(`${SUBJECTS_BASE}/${subjectId}/instructors/${userId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  return handleResponse(response, "Failed to unassign instructor");
+}

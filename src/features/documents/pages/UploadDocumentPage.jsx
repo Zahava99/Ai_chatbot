@@ -4,6 +4,7 @@ import { Upload, FileText, X, CheckCircle2, Loader2, AlertCircle, ChevronDown, R
 import { cn } from "@/lib/utils";
 import { uploadDocument } from "@/api/documentApi";
 import { getSubjects, getChapters } from "@/api/subjectApi";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 
 const ACCEPTED = [".pdf", ".docx", ".pptx"];
 
@@ -180,6 +181,9 @@ export default function UploadDocumentPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
+      {/* Must Change Password Banner */}
+      <MustChangePasswordBanner />
+
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-app">Upload Documents</h1>
         <p className="text-sm text-app opacity-50 mt-0.5">Supported: PDF, DOCX, PPTX</p>

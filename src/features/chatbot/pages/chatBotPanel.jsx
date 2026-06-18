@@ -367,11 +367,9 @@ export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated 
               <span className="opacity-60">{subjectCode ?? "this subject"}</span>
             </h1>
             <p className="text-sm text-app opacity-50 mb-7 leading-relaxed">
-              I can help you understand course material, summarise topics, or
-              answer exam-style questions. Try one of the suggestions below or
-              type your own question.
+              I can help you understand course material.
             </p>
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               {SUGGESTIONS.map((s) => (
                 <button
                   key={s}
@@ -381,7 +379,7 @@ export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated 
                   {s}
                 </button>
               ))}
-            </div>
+            </div> */}
           </div>
         ) : (
           <div className="max-w-2xl mx-auto">

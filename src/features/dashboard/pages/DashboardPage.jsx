@@ -7,6 +7,8 @@ import {
   CheckCircle2, AlertCircle, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import useAuthStore from "@/stores/useAuthStore";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 
 /* ─── mock data ─────────────────────────────────────────────── */
 const STATS = [
@@ -131,6 +133,7 @@ function StatusBadge({ status }) {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [hoveredRow, setHoveredRow] = useState(null);
+  const user = useAuthStore((s) => s.user);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -159,6 +162,9 @@ export default function DashboardPage() {
           Upload Document
         </button>
       </div>
+
+      {/* ── Must Change Password Banner ── */}
+      <MustChangePasswordBanner />
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

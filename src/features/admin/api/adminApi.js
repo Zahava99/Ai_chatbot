@@ -5,8 +5,11 @@ import { getAccessToken } from "@/features/auth/api/authUtils";
  * GET /api/v1/admin/users
  * Returns a paginated list of all users.
  */
-export async function fetchAdminUsers({ page = 1, pageSize = 100 } = {}) {
-  const url = `${API_CONFIG.BASE_URL}/api/v1/admin/users?page=${page}&pageSize=${pageSize}`;
+export async function fetchAdminUsers({ page = 1, pageSize = 100, search = "" } = {}) {
+  let url = `${API_CONFIG.BASE_URL}/api/v1/admin/users?page=${page}&pageSize=${pageSize}`;
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
 
   const res = await fetch(url, {
     method: "GET",

@@ -7,6 +7,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 
 const STATUS_STYLES = {
   indexed: "text-emerald-400 bg-emerald-500/10",
@@ -106,6 +107,9 @@ export default function DocumentListPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      {/* Must Change Password Banner */}
+      <MustChangePasswordBanner />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

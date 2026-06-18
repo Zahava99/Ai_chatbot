@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Layers, MoreVertical, Search, AlertCircle } from "lucide-react";
 import useSubjectStore from "@/stores/useSubjectStore";
+import useAuthStore from "@/stores/useAuthStore";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 
 const ACCENT_COLORS = [
   "bg-blue-500/10 text-blue-400",
@@ -19,6 +21,7 @@ export default function LecturerSubjectListPage() {
   const subjects      = useSubjectStore((s) => s.subjects);
   const loading       = useSubjectStore((s) => s.subjectsLoading);
   const error         = useSubjectStore((s) => s.subjectsError);
+  const user          = useAuthStore((s) => s.user);
 
   useEffect(() => {
     useSubjectStore.getState().fetchSubjects();
@@ -31,6 +34,9 @@ export default function LecturerSubjectListPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      {/* Must Change Password Banner */}
+      <MustChangePasswordBanner error403={error} />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -41,8 +47,8 @@ export default function LecturerSubjectListPage() {
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
+      {/* Error (only show if NOT a must-change-password situation) */}
+      {error && !user?.mustChangePassword && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
           <AlertCircle size={16} className="shrink-0" />
           {error}
