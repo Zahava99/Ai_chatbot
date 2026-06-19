@@ -12,9 +12,11 @@ import {
 import { cn } from "@/lib/utils";
 import Header from "@/components/common/header";
 import LoadingScreen from "@/components/common/loadingscreen";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import { useNotebookStore } from "@/features/chatbot/store/notebookStore";
 import SubjectCard from "@/features/chatbot/components/SubjectCard";
 import { getSubjects } from "@/api/subjectApi";
+import useAuthStore from "@/stores/useAuthStore";
 
 // --- TopBar ---
 function TopBar({ view, setView, sort, setSort, onCreateNew, searchQuery, setSearchQuery }) {
@@ -161,6 +163,7 @@ export default function MainPage() {
   const togglePin = useNotebookStore((s) => s.togglePin);
   const setActiveNotebook = useNotebookStore((s) => s.setActiveNotebook);
 
+  const user = useAuthStore((s) => s.user);
   const { apiSubjects, apiLoading, apiError, refetch } = useApiSubjects();
 
   // Merge pinned state into API subjects
@@ -317,8 +320,10 @@ export default function MainPage() {
                   </button>
                 ))}
               </div> */}
+            {/* Must Change Password Banner */}
+              <MustChangePasswordBanner error403={apiError} />
 
-              {apiError ? (
+              {apiError && !user?.mustChangePassword ? (
                 <div className="flex items-center gap-3 text-sm text-red-500/80 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
                   <span>Failed to load: {apiError}</span>
                   <button

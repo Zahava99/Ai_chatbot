@@ -114,6 +114,15 @@ export default function AdminDocumentListPage() {
     return subject?.code ?? "—";
   }
 
+  /** Look up instructors for a subjectId */
+  function getInstructorNames(subjectId) {
+    if (!subjectId) return "—";
+    const subject = subjects.find((s) => s.id === subjectId);
+    const instructors = subject?.instructors || [];
+    if (instructors.length === 0) return "—";
+    return instructors.map((i) => i.fullName || i.email).join(", ");
+  }
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Header */}
@@ -164,16 +173,16 @@ export default function AdminDocumentListPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-app-border">
-                {["Title", "File Name", "Subject", "Type", "Size", "Status", "Date", ""].map((h) => (
+                {["Title", "File Name", "Subject", "Lecturers", "Type", "Size", "Status", "Date", ""].map((h) => (
                   <th key={h} className="text-left px-4 py-3 text-xs text-app opacity-40 font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-app-border">
               {loading ? (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">Loading...</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-app opacity-50">Loading...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">No documents found</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-app opacity-50">No documents found</td></tr>
               ) : filtered.map((doc) => (
                 <tr key={doc.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
                   <td className="px-4 py-3">
@@ -187,6 +196,9 @@ export default function AdminDocumentListPage() {
                     <span className="text-xs px-2 py-0.5 rounded-full font-medium text-sky-400 bg-sky-500/10">
                       {getSubjectCode(doc.subjectId)}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-app opacity-60 text-xs">
+                    {getInstructorNames(doc.subjectId)}
                   </td>
                   <td className="px-4 py-3 text-app opacity-50 text-xs uppercase">{doc.fileType}</td>
                   <td className="px-4 py-3 text-app opacity-60">{formatFileSize(doc.sizeBytes)}</td>

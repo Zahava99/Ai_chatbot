@@ -7,6 +7,7 @@ import useSubjectStore from "@/stores/useSubjectStore";
 import { Button } from "@/components/ui/button";
 import UpdateSubjectModal from "@/features/subjects/components/UpdateSubjectModal";
 import AddChapterModal from "@/features/subjects/components/AddChapterModal";
+import AssignInstructorModal from "@/features/subjects/components/AssignInstructorModal";
 
 export default function SubjectDetailPage() {
   const { id } = useParams();
@@ -27,6 +28,7 @@ export default function SubjectDetailPage() {
   // Modal visibility
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showAddChapterModal, setShowAddChapterModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   useEffect(() => {
     // Ensure subjects are loaded for F5 fallback
@@ -56,7 +58,9 @@ export default function SubjectDetailPage() {
             >
               Update
             </Button>
-            <Button className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-sm font-bold text-blue-400">
+            <Button className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center text-sm font-bold text-blue-400"
+              onClick={() => setShowAssignModal(true)}
+            >
               Assign
             </Button>
           </div>
@@ -165,6 +169,12 @@ export default function SubjectDetailPage() {
           subjectId={id}
           currentChapterCount={chapters.length}
           onClose={() => setShowAddChapterModal(false)}
+        />
+      )}
+      {showAssignModal && (
+        <AssignInstructorModal
+          subjectId={id}
+          onClose={() => setShowAssignModal(false)}
         />
       )}
     </div>

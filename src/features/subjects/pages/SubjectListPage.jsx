@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, FileText, Layers, MoreVertical, AlertCircle } from "lucide-react";
 import useSubjectStore from "@/stores/useSubjectStore";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 
 // Cycles through accent colours for subject cards
 const ACCENT_COLORS = [
@@ -59,6 +60,9 @@ export default function SubjectListPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      {/* Must Change Password Banner */}
+      <MustChangePasswordBanner />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -139,6 +143,23 @@ export default function SubjectListPage() {
                     <span>{s.chapterCount} chapters</span>
                   </div>
                 </div>
+
+                {/* Instructors */}
+                {s.instructors && s.instructors.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-app-border">
+                    <p className="text-xs text-app opacity-30 mb-1">Instructors</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {s.instructors.map((inst) => (
+                        <span
+                          key={inst.userId}
+                          className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-medium"
+                        >
+                          {inst.fullName || inst.email}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

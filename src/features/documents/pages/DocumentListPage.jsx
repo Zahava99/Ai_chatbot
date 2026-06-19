@@ -7,6 +7,8 @@ import {
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+import useAuthStore from "@/stores/useAuthStore";
 
 const STATUS_STYLES = {
   indexed: "text-emerald-400 bg-emerald-500/10",
@@ -56,6 +58,7 @@ export default function DocumentListPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     fetchDocuments();
@@ -97,6 +100,15 @@ export default function DocumentListPage() {
     (d.title || "").toLowerCase().includes(search.toLowerCase())
   );
 
+  // Only show documents from subjects assigned to the current user
+  const assignedSubjectIds = new Set(
+    subjects
+      .filter((s) => (s.instructors || []).some((i) => i.userId === user?.id))
+      .map((s) => s.id)
+  );
+
+  const visibleDocs = filtered.filter((d) => assignedSubjectIds.has(d.subjectId));
+
   /** Look up subject code by subjectId */
   function getSubjectCode(subjectId) {
     if (!subjectId) return "—";
@@ -106,6 +118,9 @@ export default function DocumentListPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
+      {/* Must Change Password Banner */}
+      <MustChangePasswordBanner />
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -161,9 +176,9 @@ export default function DocumentListPage() {
             <tbody className="divide-y divide-app-border">
               {loading ? (
                 <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">Loading...</td></tr>
-              ) : filtered.length === 0 ? (
+              ) : visibleDocs.length === 0 ? (
                 <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">No documents found</td></tr>
-              ) : filtered.map((doc) => (
+              ) : visibleDocs.map((doc) => (
                 <tr key={doc.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
@@ -210,7 +225,7 @@ export default function DocumentListPage() {
       {/* Grid view */}
       {view === "grid" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((doc) => (
+          {visibleDocs.map((doc) => (
             <div key={doc.id} className="bg-panel border border-app-border rounded-xl p-4 hover:border-black/25 dark:hover:border-white/25 transition-colors cursor-pointer group"
               onClick={() => navigate(`/documents_upload/${doc.id}`)}
             >

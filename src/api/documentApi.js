@@ -133,3 +133,25 @@ export async function deleteDocument(id) {
     throw new Error(`Failed to delete document: ${response.status} ${response.statusText}`);
   }
 }
+
+
+/**
+ * Fetch chunks for a document.
+ * GET /api/v1/documents/:id/chunks
+ * @param {number|string} id - Document ID
+ * @returns {Promise<Array>} The chunks array
+ */
+export async function getDocumentChunks(id) {
+  const url = `${API_CONFIG.BASE_URL}/api/v1/documents/${id}/chunks`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: await getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch chunks: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+}

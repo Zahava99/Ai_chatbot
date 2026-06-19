@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FileText, Cpu, Calendar, Hash, Eye, RefreshCw, ChevronRight } from "lucide-react";
-import { getDocumentById, reindexDocument } from "@/api/documentApi";
+import { FileText, Cpu, Calendar, Hash, Eye, RefreshCw, ChevronRight, Loader2 } from "lucide-react";
+import { getDocumentById, reindexDocument, getDocumentChunks } from "@/api/documentApi";
 
 const STATUS_STYLES = {
   indexed: "text-emerald-400 bg-emerald-500/10",
@@ -29,11 +29,24 @@ export default function DocumentDetailPage() {
   const [doc, setDoc] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reindexing, setReindexing] = useState(false);
+  const [chunks, setChunks] = useState([]);
+  const [chunksLoading, setChunksLoading] = useState(false);
 
   useEffect(() => {
     setLoading(true);
     getDocumentById(id)
-      .then((data) => setDoc(data))
+      .then((data) => {
+        setDoc(data);
+        // Fetch chunks preview
+        setChunksLoading(true);
+        getDocumentChunks(id)
+          .then((chunksData) => {
+            const items = chunksData?.items ?? (Array.isArray(chunksData) ? chunksData : []);
+            setChunks(items);
+          })
+          .catch(() => setChunks([]))
+          .finally(() => setChunksLoading(false));
+      })
       .catch((err) => console.error("Failed to load document:", err))
       .finally(() => setLoading(false));
   }, [id]);
@@ -139,25 +152,35 @@ export default function DocumentDetailPage() {
       <div className="bg-panel border border-app-border rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-app-border">
           <p className="text-sm font-semibold text-app">Chunks Preview</p>
-          {doc.chunkCount && (
+          {chunks.length > 3 && (
             <button onClick={() => navigate(`/documents_upload/${id}/chunks`)} className="text-xs text-emerald-400 hover:underline">
-              View all {doc.chunkCount} chunks
+              View all {chunks.length} chunks
             </button>
           )}
         </div>
-        {!doc.chunkCount ? (
+        {chunksLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 size={18} className="text-app opacity-40 animate-spin" />
+          </div>
+        ) : chunks.length === 0 ? (
           <div className="px-5 py-6 text-center">
             <p className="text-sm text-app opacity-40">No chunks available</p>
           </div>
         ) : (
           <div className="divide-y divide-app-border">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="px-5 py-4">
+            {chunks.slice(0, 3).map((chunk, idx) => (
+              <div key={chunk.id ?? idx} className="px-5 py-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="text-xs text-app opacity-40 font-mono">Chunk #{i}</span>
+                  <span className="text-xs text-app opacity-40 font-mono">Chunk #{chunk.chunkIndex ?? idx}</span>
+                  {chunk.pageNumber && (
+                    <span className="text-xs text-app opacity-30">p.{chunk.pageNumber}</span>
+                  )}
+                  {chunk.tokenCount && (
+                    <span className="text-xs text-app opacity-30">{chunk.tokenCount} tokens</span>
+                  )}
                 </div>
                 <p className="text-sm text-app opacity-60 leading-relaxed line-clamp-3">
-                  Chunk content preview...
+                  {chunk.content || "—"}
                 </p>
               </div>
             ))}

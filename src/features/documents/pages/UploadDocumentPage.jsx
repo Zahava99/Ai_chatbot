@@ -4,6 +4,8 @@ import { Upload, FileText, X, CheckCircle2, Loader2, AlertCircle, ChevronDown, R
 import { cn } from "@/lib/utils";
 import { uploadDocument } from "@/api/documentApi";
 import { getSubjects, getChapters } from "@/api/subjectApi";
+import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+import useAuthStore from "@/stores/useAuthStore";
 
 const ACCEPTED = [".pdf", ".docx", ".pptx"];
 
@@ -67,6 +69,7 @@ export default function UploadDocumentPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const inputRef = useRef(null);
   const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
 
   // Fetch subjects on mount
   useEffect(() => {
@@ -75,6 +78,11 @@ export default function UploadDocumentPage() {
       .catch((err) => console.error("Failed to load subjects:", err))
       .finally(() => setLoadingSubjects(false));
   }, []);
+
+  // Only show subjects assigned to the current user
+  const assignedSubjects = subjects.filter((s) =>
+    (s.instructors || []).some((i) => i.userId === user?.id)
+  );
 
   // Fetch chapters when subject changes
   useEffect(() => {
@@ -180,6 +188,9 @@ export default function UploadDocumentPage() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
+      {/* Must Change Password Banner */}
+      <MustChangePasswordBanner />
+
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-app">Upload Documents</h1>
         <p className="text-sm text-app opacity-50 mt-0.5">Supported: PDF, DOCX, PPTX</p>
@@ -213,7 +224,7 @@ export default function UploadDocumentPage() {
               <option value="">
                 {loadingSubjects ? "Loading subjects..." : "Select a subject"}
               </option>
-              {subjects.map((s) => (
+              {assignedSubjects.map((s) => (
                 <option key={s.id} value={s.id} style={{ backgroundColor: "var(--panel-bg)" }}>
                   {s.code}{s.name ? ` - ${s.name}` : ""}
                 </option>
