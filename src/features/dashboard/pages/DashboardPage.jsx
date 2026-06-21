@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, MessageSquare, Target, Cpu,
@@ -9,6 +9,8 @@ import {
 import { cn } from "@/lib/utils";
 import useAuthStore from "@/stores/useAuthStore";
 import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+import { getDocuments } from "@/api/documentApi";
+import { getSubjects } from "@/api/subjectApi";
 
 /* ─── mock data ─────────────────────────────────────────────── */
 const STATS = [
@@ -129,11 +131,41 @@ function StatusBadge({ status }) {
   );
 }
 
+function StatCardSkeleton() {
+  return (
+    <div className="bg-panel border border-app-border rounded-2xl p-5 flex flex-col gap-4 animate-pulse">
+      <div className="flex items-start justify-between">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-black/10 dark:bg-white/10" />
+        <div className="w-12 h-5 rounded-full bg-black/10 dark:bg-white/10" />
+      </div>
+      <div>
+        <div className="h-7 w-20 rounded bg-black/10 dark:bg-white/10" />
+        <div className="h-3 w-32 rounded bg-black/10 dark:bg-white/10 mt-2" />
+      </div>
+      <div className="border-t border-app-border pt-3">
+        <div className="h-3 w-24 rounded bg-black/10 dark:bg-white/10" />
+      </div>
+    </div>
+  );
+}
+
+function mapBackendStatus(status) {
+  const s = String(status).toLowerCase();
+  if (s === "indexed") return "indexed";
+  if (s === "failed") return "error";
+  return "processing"; // for Uploaded, Processing, etc.
+}
+
 /* ─── page ───────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [hoveredRow, setHoveredRow] = useState(null);
   const user = useAuthStore((s) => s.user);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState([]);
+  const [recentUploads, setRecentUploads] = useState([]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -141,6 +173,154 @@ export default function DashboardPage() {
     if (h < 18) return "Good afternoon";
     return "Good evening";
   })();
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [docsData, subjectsData] = await Promise.all([
+          getDocuments(1, 10),
+          getSubjects().catch(() => []),
+        ]);
+
+        const docs = docsData.items || [];
+        const subjects = subjectsData || [];
+        const subjectMap = {};
+        subjects.forEach((s) => {
+          subjectMap[s.id] = s.name;
+        });
+
+        // Populate stats
+        const computedStats = [
+          {
+            icon: FileText,
+            label: "Tổng tài liệu",
+            value: String(docsData.totalCount || docs.length),
+            sub: `${subjects.length} subjects`,
+            delta: "",
+            deltaLabel: "",
+            up: null,
+            accent: "text-blue-400",
+            bg: "bg-blue-500/10",
+            ring: "ring-blue-500/20",
+          },
+          {
+            icon: MessageSquare,
+            label: "Tổng câu hỏi",
+            value: "1,284",
+            sub: "across all sessions",
+            delta: "",
+            deltaLabel: "",
+            up: null,
+            accent: "text-emerald-400",
+            bg: "bg-emerald-500/10",
+            ring: "ring-emerald-500/20",
+          },
+          {
+            icon: Target,
+            label: "Accuracy Score",
+            value: "92.4%",
+            sub: "RAGAS evaluation",
+            delta: "",
+            deltaLabel: "",
+            up: null,
+            accent: "text-purple-400",
+            bg: "bg-purple-500/10",
+            ring: "ring-purple-500/20",
+          },
+          {
+            icon: Cpu,
+            label: "Active Embedding",
+            value: "e5-base",
+            sub: "multilingual-e5-base",
+            delta: "Running",
+            deltaLabel: "",
+            up: null,
+            accent: "text-orange-400",
+            bg: "bg-orange-500/10",
+            ring: "ring-orange-500/20",
+          },
+        ];
+        setStats(computedStats);
+
+        // Recent Uploads
+        const mappedUploads = docs.slice(0, 5).map((d) => {
+          let sizeStr = "—";
+          if (d.sizeBytes) {
+            const kb = d.sizeBytes / 1024;
+            if (kb < 1024) {
+              sizeStr = `${kb.toFixed(1)} KB`;
+            } else {
+              sizeStr = `${(kb / 1024).toFixed(1)} MB`;
+            }
+          }
+
+          const dateStr = d.createdAtUtc
+            ? new Date(d.createdAtUtc).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            : "—";
+
+          return {
+            id: d.id,
+            name: d.originalFileName || d.title,
+            subject: subjectMap[d.subjectId] || `Subject #${d.subjectId}`,
+            size: sizeStr,
+            status: mapBackendStatus(d.status),
+            date: dateStr,
+            chunks: d.pageCount || 0,
+          };
+        });
+        setRecentUploads(mappedUploads);
+      } catch (err) {
+        console.error("[LecturerDashboard] Failed to fetch stats", err);
+        setError("Failed to load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-6 xl:p-8 max-w-6xl mx-auto space-y-8 animate-pulse-subtle">
+        {/* Header */}
+        <div className="flex items-start justify-between animate-pulse">
+          <div>
+            <div className="h-3 w-24 rounded bg-black/10 dark:bg-white/10 mb-2" />
+            <div className="h-7 w-48 rounded bg-black/10 dark:bg-white/10" />
+            <div className="h-4 w-64 rounded bg-black/10 dark:bg-white/10 mt-2" />
+          </div>
+          <div className="w-36 h-10 rounded-xl bg-black/10 dark:bg-white/10" />
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+
+        {/* Loading Spinner */}
+        <div className="flex flex-col items-center justify-center py-20 text-sm text-app opacity-40 gap-2">
+          <Loader2 className="animate-spin" size={24} />
+          Loading workspace statistics...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 xl:p-8 max-w-6xl mx-auto space-y-8">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          <AlertCircle size={16} className="shrink-0" />
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 xl:p-8 max-w-6xl mx-auto space-y-8">
@@ -168,7 +348,7 @@ export default function DashboardPage() {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {STATS.map((s) => <StatCard key={s.label} {...s} />)}
+        {stats.map((s) => <StatCard key={s.label} {...s} />)}
       </div>
 
       {/* ── Quick actions ── */}
@@ -201,7 +381,7 @@ export default function DashboardPage() {
             </div>
             <span className="text-sm font-semibold text-app">Recent Uploads</span>
             <span className="text-xs text-app opacity-30 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
-              {RECENT_UPLOADS.length}
+              {recentUploads.length}
             </span>
           </div>
           <button
@@ -221,7 +401,7 @@ export default function DashboardPage() {
 
         {/* rows */}
         <div className="divide-y divide-app-border">
-          {RECENT_UPLOADS.map((doc) => (
+          {recentUploads.map((doc) => (
             <div
               key={doc.id}
               onMouseEnter={() => setHoveredRow(doc.id)}
@@ -266,7 +446,7 @@ export default function DashboardPage() {
         {/* footer */}
         <div className="px-5 py-3 border-t border-app-border bg-black/[0.02] dark:bg-white/[0.02]">
           <p className="text-xs text-app opacity-25">
-            Showing {RECENT_UPLOADS.length} most recent uploads
+            Showing {recentUploads.length} most recent uploads
           </p>
         </div>
       </div>

@@ -55,3 +55,30 @@ export async function createAdminUser(payload) {
 
   return res.json();
 }
+
+/**
+ * POST /api/v1/admin/users/:id/active
+ * Activates or deactivates a user.
+ */
+export async function setAdminUserActive(id, isActive) {
+  const url = `${API_CONFIG.BASE_URL}/api/v1/admin/users/${id}/active`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAccessToken() ?? ""}`,
+    },
+    body: JSON.stringify({ isActive }),
+  });
+
+  if (!res.ok) {
+    let message = `Failed to update user status: ${res.status} ${res.statusText}`;
+    try {
+      const data = await res.json();
+      if (data?.message) message = data.message;
+    } catch (_) {}
+    throw new Error(message);
+  }
+}
+
