@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, MoreVertical, Trash2, Ban, Activity, Mail, Phone, BookOpen, GraduationCap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers, setAdminUserActive } from "@/features/admin/api/adminApi";
 import AddStudentModal from "@/features/admin/components/AddStudentModal";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -108,16 +108,23 @@ export default function StudentManagementPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // ── local actions (optimistic) ─────────────────────────────────────────────
-  function handleBan(id) {
-    setStudents((prev) =>
-      prev.map((s) => s.id === id ? { ...s, status: s.status === "banned" ? "active" : "banned" } : s)
-    );
-    setOpenMenu(null);
-  }
-
-  function handleDelete(id) {
-    setStudents((prev) => prev.filter((s) => s.id !== id));
+  // ── local actions (API connected) ─────────────────────────────────────────────
+  async function handleBan(id) {
+    const s = students.find((x) => x.id === id);
+    if (!s) return;
+    const nextActive = s.status === "inactive" || s.status === "banned" ? true : false;
+    
+    try {
+      await setAdminUserActive(id, nextActive);
+      setStudents((prev) =>
+        prev.map((x) =>
+          x.id === id ? { ...x, status: nextActive ? "active" : "inactive" } : x
+        )
+      );
+    } catch (err) {
+      console.error("[StudentMgmt] Failed to toggle active status", err);
+      alert(err.message || "Failed to update student status.");
+    }
     setOpenMenu(null);
   }
 
@@ -367,13 +374,7 @@ export default function StudentManagementPage() {
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-yellow-400 hover:bg-yellow-500/5 transition-colors"
               >
                 <Ban size={12} />
-                {s.status === "banned" ? "Unban Student" : "Ban Student"}
-              </button>
-              <button
-                onClick={() => handleDelete(s.id)}
-                className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-400 hover:bg-red-500/5 transition-colors"
-              >
-                <Trash2 size={12} /> Delete
+                {s.status === "inactive" || s.status === "banned" ? "Unban Student" : "Ban Student"}
               </button>
             </div>
           </>

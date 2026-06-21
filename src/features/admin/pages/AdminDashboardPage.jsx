@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, GraduationCap, BookOpen, ShieldCheck,
   TrendingUp, TrendingDown, Activity, Settings,
   ArrowRight, UserPlus, AlertCircle, CheckCircle2,
-  Clock, Cpu, BarChart2, Database,
+  Clock, Cpu, BarChart2, Database, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import { getDocuments } from "@/api/documentApi";
 
 /* ─── mock data ─────────────────────────────────────────────── */
 const STATS = [
@@ -210,10 +212,34 @@ function StatCard({ icon: Icon, label, value, sub, delta, deltaLabel, up, accent
   );
 }
 
+function StatCardSkeleton() {
+  return (
+    <div className="bg-panel border border-app-border rounded-2xl p-5 flex flex-col gap-4 animate-pulse">
+      <div className="flex items-start justify-between">
+        <div className="w-10 h-10 rounded-xl bg-black/10 dark:bg-white/10" />
+        <div className="w-12 h-5 rounded-full bg-black/10 dark:bg-white/10" />
+      </div>
+      <div>
+        <div className="h-7 w-20 rounded bg-black/10 dark:bg-white/10" />
+        <div className="h-3 w-32 rounded bg-black/10 dark:bg-white/10 mt-2" />
+      </div>
+      <div className="border-t border-app-border pt-3">
+        <div className="h-3 w-24 rounded bg-black/10 dark:bg-white/10" />
+      </div>
+    </div>
+  );
+}
+
 /* ─── page ───────────────────────────────────────────────────── */
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const [hoveredRow, setHoveredRow] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stats, setStats] = useState([]);
+  const [roleDistribution, setRoleDistribution] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -221,6 +247,198 @@ export default function AdminDashboardPage() {
     if (h < 18) return "Good afternoon";
     return "Good evening";
   })();
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [usersData, docsData] = await Promise.all([
+          fetchAdminUsers({ page: 1, pageSize: 1000 }),
+          getDocuments(1, 100).catch(() => ({ items: [], totalCount: 0 })),
+        ]);
+
+        const users = usersData.items || [];
+        const docs = docsData.items || [];
+
+        const totalUsers = users.length;
+        const totalLecturers = users.filter((u) => u.roles.includes("Researcher")).length;
+        const totalStudents = users.filter((u) => u.roles.includes("Student")).length;
+        const totalAdmins = users.filter((u) => u.roles.includes("Admin")).length;
+
+        // Populate Stats
+        const calculatedStats = [
+          {
+            icon: Users,
+            label: "Tổng người dùng",
+            value: String(totalUsers),
+            sub: "across all roles",
+            delta: "",
+            deltaLabel: "",
+            up: null,
+            accent: "text-blue-400",
+            bg: "bg-blue-500/10",
+            ring: "ring-blue-500/20",
+          },
+          {
+            icon: GraduationCap,
+            label: "Giảng viên",
+            value: String(totalLecturers),
+            sub: "Researchers",
+            delta: "",
+            deltaLabel: "",
+            up: null,
+            accent: "text-violet-400",
+            bg: "bg-violet-500/10",
+            ring: "ring-violet-500/20",
+          },
+          {
+            icon: BookOpen,
+            label: "Sinh viên",
+            value: String(totalStudents),
+            sub: "enrolled",
+            delta: "",
+            deltaLabel: "",
+            up: null,
+            accent: "text-emerald-400",
+            bg: "bg-emerald-500/10",
+            ring: "ring-emerald-500/20",
+          },
+          {
+            icon: Cpu,
+            label: "System Status",
+            value: "Online",
+            sub: "All services running",
+            delta: "Healthy",
+            deltaLabel: "",
+            up: null,
+            accent: "text-orange-400",
+            bg: "bg-orange-500/10",
+            ring: "ring-orange-500/20",
+          },
+        ];
+        setStats(calculatedStats);
+
+        // Role distribution
+        const dist = [
+          { role: "Students",  count: totalStudents, total: totalUsers, color: "bg-emerald-400" },
+          { role: "Lecturers", count: totalLecturers,  total: totalUsers, color: "bg-violet-400"  },
+          { role: "Admins",    count: totalAdmins,   total: totalUsers, color: "bg-blue-400"    },
+        ];
+        setRoleDistribution(dist);
+
+        // Recent activity:
+        const recentUsers = [...users]
+          .filter((u) => u.lastLoginUtc)
+          .map((u) => ({
+            id: `user-${u.id}`,
+            user: u.fullName || u.email,
+            action: "Logged into platform",
+            role: u.roles[0]?.toLowerCase() || "student",
+            time: u.lastLoginUtc,
+            type: "register",
+            dateObj: new Date(u.lastLoginUtc),
+          }));
+
+        const newRegistrations = [...users]
+          .map((u) => ({
+            id: `reg-${u.id}`,
+            user: u.fullName || u.email,
+            action: "Registered new account",
+            role: u.roles[0]?.toLowerCase() || "student",
+            time: u.lastLoginUtc || new Date().toISOString(),
+            type: "register",
+            dateObj: u.lastLoginUtc ? new Date(u.lastLoginUtc) : new Date(0),
+          }));
+
+        const recentDocs = docs.map((d) => ({
+          id: `doc-${d.id}`,
+          user: "Lecturer",
+          action: `Uploaded document: ${d.title}`,
+          role: "lecturer",
+          time: d.createdAtUtc,
+          type: "upload",
+          dateObj: new Date(d.createdAtUtc),
+        }));
+
+        const merged = [...recentUsers, ...newRegistrations, ...recentDocs]
+          .sort((a, b) => b.dateObj - a.dateObj)
+          .slice(0, 10)
+          .map((item) => {
+            const diff = new Date() - item.dateObj;
+            let timeStr = "Just now";
+            if (diff > 0) {
+              const diffMin = Math.floor(diff / 60000);
+              const diffHr = Math.floor(diff / 3600000);
+              if (diffMin < 60) {
+                timeStr = diffMin <= 1 ? "Just now" : `${diffMin} min ago`;
+              } else if (diffHr < 24) {
+                timeStr = `${diffHr} hr ago`;
+              } else {
+                timeStr = item.dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              }
+            }
+            return {
+              id: item.id,
+              user: item.user,
+              action: item.action,
+              role: item.role,
+              time: timeStr,
+              type: item.type,
+            };
+          });
+
+        setRecentActivity(merged);
+      } catch (err) {
+        console.error("[AdminDashboard] Failed to fetch stats", err);
+        setError("Failed to load dashboard data.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-6 xl:p-8 max-w-6xl mx-auto space-y-8 animate-pulse-subtle">
+        {/* Header */}
+        <div className="flex items-start justify-between animate-pulse">
+          <div>
+            <div className="h-3 w-24 rounded bg-black/10 dark:bg-white/10 mb-2" />
+            <div className="h-7 w-48 rounded bg-black/10 dark:bg-white/10" />
+            <div className="h-4 w-64 rounded bg-black/10 dark:bg-white/10 mt-2" />
+          </div>
+          <div className="w-36 h-10 rounded-xl bg-black/10 dark:bg-white/10" />
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
+        </div>
+
+        {/* Loading Spinner */}
+        <div className="flex flex-col items-center justify-center py-20 text-sm text-app opacity-40 gap-2">
+          <Loader2 className="animate-spin" size={24} />
+          Loading system statistics...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 xl:p-8 max-w-6xl mx-auto space-y-8">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          <AlertCircle size={16} className="shrink-0" />
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 xl:p-8 max-w-6xl mx-auto space-y-8">
@@ -245,7 +463,7 @@ export default function AdminDashboardPage() {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {STATS.map((s) => (
+        {stats.map((s) => (
           <StatCard key={s.label} {...s} />
         ))}
       </div>
@@ -290,8 +508,8 @@ export default function AdminDashboardPage() {
             </button>
           </div>
           <div className="px-5 py-4 flex flex-col gap-4">
-            {ROLE_DISTRIBUTION.map(({ role, count, total, color }) => {
-              const pct = Math.round((count / total) * 100);
+            {roleDistribution.map(({ role, count, total, color }) => {
+              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
               return (
                 <div key={role} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-xs">
@@ -308,7 +526,7 @@ export default function AdminDashboardPage() {
               );
             })}
             <p className="text-xs text-app opacity-30 border-t border-app-border pt-3 mt-1">
-              312 total registered accounts
+              {roleDistribution.reduce((acc, r) => acc + r.count, 0)} total registered accounts
             </p>
           </div>
         </div>
@@ -365,7 +583,7 @@ export default function AdminDashboardPage() {
             </div>
             <span className="text-sm font-semibold text-app">Recent Activity</span>
             <span className="text-xs text-app opacity-30 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-full">
-              {RECENT_ACTIVITY.length}
+              {recentActivity.length}
             </span>
           </div>
           <button
@@ -387,7 +605,7 @@ export default function AdminDashboardPage() {
 
         {/* rows */}
         <div className="divide-y divide-app-border">
-          {RECENT_ACTIVITY.map((item) => (
+          {recentActivity.map((item) => (
             <div
               key={item.id}
               onMouseEnter={() => setHoveredRow(item.id)}
@@ -406,7 +624,7 @@ export default function AdminDashboardPage() {
               <span
                 className={cn(
                   "text-xs px-2 py-0.5 rounded-full font-medium capitalize whitespace-nowrap",
-                  ROLE_BADGE[item.role]
+                  ROLE_BADGE[item.role] || "text-app"
                 )}
               >
                 {item.role}
@@ -414,7 +632,7 @@ export default function AdminDashboardPage() {
 
               {/* action */}
               <div className="flex items-center gap-1.5 whitespace-nowrap">
-                {ACTIVITY_ICON[item.type]}
+                {ACTIVITY_ICON[item.type] || ACTIVITY_ICON["settings"]}
                 <span className="text-xs text-app opacity-60">{item.action}</span>
               </div>
 
@@ -427,7 +645,7 @@ export default function AdminDashboardPage() {
         {/* footer */}
         <div className="px-5 py-3 border-t border-app-border bg-black/[0.02] dark:bg-white/[0.02]">
           <p className="text-xs text-app opacity-25">
-            Showing {RECENT_ACTIVITY.length} most recent events
+            Showing {recentActivity.length} most recent events
           </p>
         </div>
       </div>
