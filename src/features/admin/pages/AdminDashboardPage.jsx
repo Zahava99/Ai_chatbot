@@ -1,9 +1,10 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, GraduationCap, BookOpen, ShieldCheck,
-  TrendingUp, TrendingDown, Activity, Settings,
-  ArrowRight, UserPlus, AlertCircle, CheckCircle2,
+  TrendingUp, TrendingDown, Settings,
+  ArrowRight, UserPlus, AlertCircle,
   Clock, Cpu, BarChart2, Database, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -251,17 +252,17 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      setError(null);
-      try {
-        const [usersData, docsData] = await Promise.all([
-          fetchAdminUsers({ page: 1, pageSize: 1000 }),
+        setError(null);
+        try {
+          const [usersData, docsData] = await Promise.all([
+          fetchAdminUsers({ page: 1, pageSize: 100 }),
           getDocuments(1, 100).catch(() => ({ items: [], totalCount: 0 })),
         ]);
 
         const users = usersData.items || [];
         const docs = docsData.items || [];
 
-        const totalUsers = users.length;
+        const totalUsers = usersData.totalCount ?? users.length;
         const totalLecturers = users.filter((u) => u.roles.includes("Researcher")).length;
         const totalStudents = users.filter((u) => u.roles.includes("Student")).length;
         const totalAdmins = users.filter((u) => u.roles.includes("Admin")).length;
