@@ -213,7 +213,8 @@ export default function StudentManagementPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-app-border">
-              {["Student", "Student ID", "Contact", "Major", "Status", "Questions", "Docs", ""].map((h) => (
+              {/* {["Student", "Student ID", "Contact", "Major", "Status", "Questions", "Docs", ""].map((h) => ( */}
+              {["Student", "Contact", "Status", ""].map((h) => (
                 <th key={h} className="text-left px-5 py-3 text-xs text-app opacity-40 font-medium whitespace-nowrap">
                   {h}
                 </th>
@@ -274,7 +275,7 @@ export default function StudentManagementPage() {
                 </td>
 
                 {/* Student ID */}
-                <td className="px-5 py-3">
+                {/* <td className="px-5 py-3">
                   {s.studentId ? (
                     <span className="text-xs font-mono text-app opacity-60 bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded-md">
                       {s.studentId}
@@ -282,7 +283,7 @@ export default function StudentManagementPage() {
                   ) : (
                     <span className="text-xs text-app opacity-25">—</span>
                   )}
-                </td>
+                </td> */}
 
                 {/* Contact */}
                 <td className="px-5 py-3">
@@ -299,7 +300,7 @@ export default function StudentManagementPage() {
                 </td>
 
                 {/* Major */}
-                <td className="px-5 py-3">
+                {/* <td className="px-5 py-3">
                   {s.major ? (
                     <span className="flex items-center gap-1.5 text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full w-fit font-medium">
                       <BookOpen size={11} />
@@ -308,7 +309,7 @@ export default function StudentManagementPage() {
                   ) : (
                     <span className="text-xs text-app opacity-25">—</span>
                   )}
-                </td>
+                </td> */}
 
                 {/* Status */}
                 <td className="px-5 py-3">
@@ -322,10 +323,10 @@ export default function StudentManagementPage() {
                 </td>
 
                 {/* Questions */}
-                <td className="px-5 py-3 text-sm text-app opacity-60">{s.questions}</td>
+                {/* <td className="px-5 py-3 text-sm text-app opacity-60">{s.questions}</td> */}
 
                 {/* Documents */}
-                <td className="px-5 py-3 text-sm text-app opacity-60">{s.documents}</td>
+                {/* <td className="px-5 py-3 text-sm text-app opacity-60">{s.documents}</td> */}
 
                 {/* Actions */}
                 <td className="px-5 py-3">

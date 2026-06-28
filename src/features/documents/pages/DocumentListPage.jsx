@@ -1,14 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, LayoutGrid, List, Upload, Filter,
-  ChevronDown, MoreVertical, Eye, Trash2, RefreshCw,
+  ChevronDown, ChevronLeft, ChevronRight, MoreVertical, Eye, Trash2, RefreshCw, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
 import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import useAuthStore from "@/stores/useAuthStore";
+import usePagination from "@/hook/usePagination";
 
 const STATUS_STYLES = {
   indexed: "text-emerald-400 bg-emerald-500/10",
@@ -54,11 +55,14 @@ export default function DocumentListPage() {
   const [docs, setDocs] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
+
+  const { page, pageSize, totalPages, canPrev, canNext, nextPage, prevPage, goToPage } = usePagination({ totalCount, pageSize: 10 });
+
+  const pollingRef = useRef(null);
 
   useEffect(() => {
     fetchDocuments();
@@ -70,9 +74,37 @@ export default function DocumentListPage() {
       .catch((err) => console.error("Failed to load subjects:", err));
   }, []);
 
+  // Auto-poll every 5s when any document is still processing
+  const hasProcessing = docs.some((d) => d.status === "processing");
+
+  useEffect(() => {
+    if (hasProcessing && !pollingRef.current) {
+      pollingRef.current = setInterval(() => {
+        getDocuments(page, pageSize)
+          .then((data) => {
+            setDocs(data.items || []);
+            setTotalCount(data.totalCount || 0);
+          })
+          .catch((err) => console.error("Polling failed:", err));
+      }, 5000);
+    }
+
+    if (!hasProcessing && pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [hasProcessing, page, pageSize]);
+
   const fetchDocuments = () => {
     setLoading(true);
-    getDocuments(page, 20)
+    getDocuments(page, pageSize)
       .then((data) => {
         setDocs(data.items || []);
         setTotalCount(data.totalCount || 0);
@@ -195,7 +227,8 @@ export default function DocumentListPage() {
                   <td className="px-4 py-3 text-app opacity-50 text-xs uppercase">{doc.fileType}</td>
                   <td className="px-4 py-3 text-app opacity-60">{formatFileSize(doc.sizeBytes)}</td>
                   <td className="px-4 py-3">
-                    <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium capitalize", STATUS_STYLES[doc.status] || "text-app opacity-50")}>
+                    <span className={cn("inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full font-medium capitalize", STATUS_STYLES[doc.status] || "text-app opacity-50")}>
+                      {doc.status === "processing" && <Loader2 size={12} className="animate-spin" />}
                       {doc.status}
                     </span>
                   </td>
@@ -231,7 +264,8 @@ export default function DocumentListPage() {
             >
               <div className="flex items-start justify-between mb-3">
                 <FileText size={28} className="text-app opacity-40" />
-                <span className={cn("text-xs px-2 py-0.5 rounded-full font-medium capitalize", STATUS_STYLES[doc.status] || "text-app opacity-50")}>
+                <span className={cn("inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full font-medium capitalize", STATUS_STYLES[doc.status] || "text-app opacity-50")}>
+                  {doc.status === "processing" && <Loader2 size={12} className="animate-spin" />}
                   {doc.status}
                 </span>
               </div>
@@ -241,6 +275,56 @@ export default function DocumentListPage() {
               <p className="text-xs text-app opacity-30 mt-0.5">{formatDate(doc.createdAtUtc)}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-xs text-app opacity-40">
+            Page {page} of {totalPages} · {totalCount} documents
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={prevPage}
+              disabled={!canPrev}
+              className="p-1.5 rounded-lg border border-app-border text-app opacity-60 hover:opacity-100 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce((acc, p, idx, arr) => {
+                if (idx > 0 && p - arr[idx - 1] > 1) acc.push("ellipsis-" + p);
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((item) =>
+                typeof item === "string" ? (
+                  <span key={item} className="px-1 text-app opacity-30 text-xs">…</span>
+                ) : (
+                  <button
+                    key={item}
+                    onClick={() => goToPage(item)}
+                    className={cn(
+                      "min-w-[28px] h-7 rounded-lg text-xs font-medium transition-colors",
+                      item === page
+                        ? "bg-emerald-600 text-white"
+                        : "text-app opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10"
+                    )}
+                  >
+                    {item}
+                  </button>
+                )
+              )}
+            <button
+              onClick={nextPage}
+              disabled={!canNext}
+              className="p-1.5 rounded-lg border border-app-border text-app opacity-60 hover:opacity-100 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       )}
 

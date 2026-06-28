@@ -1,32 +1,20 @@
+import axios from "axios";
 import { API_CONFIG } from "@/config/api";
 import { getAccessToken } from "@/features/auth/api/authUtils";
 
-const SUBJECTS_BASE = `${API_CONFIG.BASE_URL}/api/v1/subjects`;
+const subjectClient = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+});
 
-function authHeaders() {
+// Attach auth token to every request
+subjectClient.interceptors.request.use((config) => {
   const token = getAccessToken();
-  return {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
-async function handleResponse(response, label) {
-  if (!response.ok) {
-    let message = `${label} (${response.status})`;
-    try {
-      const err = await response.json();
-      message = err.detail ?? err.message ?? message;
-    } catch {
-      // ignore parse errors
-    }
-    throw new Error(message);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-  // Some endpoints return 204 No Content or empty body
-  const text = await response.text();
-  if (!text) return null;
-  return JSON.parse(text);
-}
+  return config;
+});
 
 /**
  * GET /api/v1/subjects
@@ -35,11 +23,8 @@ async function handleResponse(response, label) {
  * @returns {Promise<Array<{ id: number, code: string, name: string, description: string, chapterCount: number, documentCount: number }>>}
  */
 export async function getSubjects() {
-  const response = await fetch(SUBJECTS_BASE, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  return handleResponse(response, "Failed to fetch subjects");
+  const { data } = await subjectClient.get("/api/v1/subjects");
+  return data;
 }
 
 /**
@@ -50,12 +35,8 @@ export async function getSubjects() {
  * @returns {Promise<{ id: number, code: string, name: string, description: string }>}
  */
 export async function createSubject(payload) {
-  const response = await fetch(SUBJECTS_BASE, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(payload),
-  });
-  return handleResponse(response, "Failed to create subject");
+  const { data } = await subjectClient.post("/api/v1/subjects", payload);
+  return data;
 }
 
 /**
@@ -67,12 +48,8 @@ export async function createSubject(payload) {
  * @returns {Promise<object>}
  */
 export async function updateSubject(subjectId, payload) {
-  const response = await fetch(`${SUBJECTS_BASE}/${subjectId}`, {
-    method: "PUT",
-    headers: authHeaders(),
-    body: JSON.stringify(payload),
-  });
-  return handleResponse(response, "Failed to update subject");
+  const { data } = await subjectClient.put(`/api/v1/subjects/${subjectId}`, payload);
+  return data;
 }
 
 /**
@@ -83,11 +60,8 @@ export async function updateSubject(subjectId, payload) {
  * @returns {Promise<Array<{ id: number, subjectId: number, title: string, orderIndex: number }>>}
  */
 export async function getChapters(subjectId) {
-  const response = await fetch(`${SUBJECTS_BASE}/${subjectId}/chapters`, {
-    method: "GET",
-    headers: authHeaders(),
-  });
-  return handleResponse(response, "Failed to fetch chapters");
+  const { data } = await subjectClient.get(`/api/v1/subjects/${subjectId}/chapters`);
+  return data;
 }
 
 /**
@@ -99,14 +73,9 @@ export async function getChapters(subjectId) {
  * @returns {Promise<{ id: number }>}
  */
 export async function createChapter(subjectId, payload) {
-  const response = await fetch(`${SUBJECTS_BASE}/${subjectId}/chapters`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(payload),
-  });
-  return handleResponse(response, "Failed to create chapter");
+  const { data } = await subjectClient.post(`/api/v1/subjects/${subjectId}/chapters`, payload);
+  return data;
 }
-
 
 /**
  * POST /api/v1/subjects/:subjectId/instructors
@@ -117,12 +86,8 @@ export async function createChapter(subjectId, payload) {
  * @returns {Promise<object|null>}
  */
 export async function assignInstructor(subjectId, userId) {
-  const response = await fetch(`${SUBJECTS_BASE}/${subjectId}/instructors`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({ userId }),
-  });
-  return handleResponse(response, "Failed to assign instructor");
+  const { data } = await subjectClient.post(`/api/v1/subjects/${subjectId}/instructors`, { userId });
+  return data;
 }
 
 /**
@@ -134,9 +99,6 @@ export async function assignInstructor(subjectId, userId) {
  * @returns {Promise<object|null>}
  */
 export async function unassignInstructor(subjectId, userId) {
-  const response = await fetch(`${SUBJECTS_BASE}/${subjectId}/instructors/${userId}`, {
-    method: "DELETE",
-    headers: authHeaders(),
-  });
-  return handleResponse(response, "Failed to unassign instructor");
+  const { data } = await subjectClient.delete(`/api/v1/subjects/${subjectId}/instructors/${userId}`);
+  return data;
 }

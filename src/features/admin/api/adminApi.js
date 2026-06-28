@@ -1,3 +1,4 @@
+import axios from "axios";
 import { API_CONFIG } from "@/config/api";
 import { getAccessToken } from "@/features/auth/api/authUtils";
 
@@ -70,8 +71,6 @@ export async function createAdminUser(payload) {
     );
     throw new Error(message);
   }
-
-  return res.json();
 }
 
 /**

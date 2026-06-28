@@ -18,19 +18,21 @@ export default function LecturerSubjectListPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  const subjects      = useSubjectStore((s) => s.subjects);
-  const loading       = useSubjectStore((s) => s.subjectsLoading);
-  const error         = useSubjectStore((s) => s.subjectsError);
-  const user          = useAuthStore((s) => s.user);
+  const subjects = useSubjectStore((s) => s.subjects);
+  const loading = useSubjectStore((s) => s.subjectsLoading);
+  const error = useSubjectStore((s) => s.subjectsError);
+  const user = useAuthStore((s) => s.user);
 
   useEffect(() => {
     useSubjectStore.getState().fetchSubjects();
   }, []);
 
-  const filtered = subjects.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.description?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = subjects
+    .filter((s) => s.instructors?.some((inst) => inst.userId === user?.id))
+    .filter((s) =>
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.description?.toLowerCase().includes(search.toLowerCase())
+    );
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -42,7 +44,7 @@ export default function LecturerSubjectListPage() {
         <div>
           <h1 className="text-xl font-semibold text-app">Môn học</h1>
           <p className="text-sm text-app opacity-50 mt-0.5">
-            {loading ? "Loading…" : `${subjects.length} subjects`}
+            {loading ? "Loading…" : `${filtered.length} subjects`}
           </p>
         </div>
       </div>
@@ -116,6 +118,22 @@ export default function LecturerSubjectListPage() {
                     <span>{s.chapterCount} chapters</span>
                   </div>
                 </div>
+                {/* Instructors */}
+                {s.instructors && s.instructors.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-app-border">
+                    <p className="text-xs text-app opacity-30 mb-1">Instructors</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {s.instructors.map((inst) => (
+                        <span
+                          key={inst.userId}
+                          className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-medium"
+                        >
+                          {inst.fullName || inst.email}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
