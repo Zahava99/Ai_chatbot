@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, LayoutGrid, List, Upload, Filter,
-  ChevronDown, ChevronLeft, ChevronRight, MoreVertical, Eye, Trash2, RefreshCw, Loader2,
+  ChevronDown, MoreVertical, Eye, Trash2, RefreshCw, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument } from "@/api/documentApi";
@@ -10,6 +10,7 @@ import { getSubjects } from "@/api/subjectApi";
 import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import useAuthStore from "@/stores/useAuthStore";
 import usePagination from "@/hook/usePagination";
+import Pagination from "@/components/common/Pagination";
 
 const STATUS_STYLES = {
   indexed: "text-emerald-400 bg-emerald-500/10",
@@ -279,53 +280,18 @@ export default function DocumentListPage() {
       )}
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-xs text-app opacity-40">
-            Page {page} of {totalPages} · {totalCount} documents
-          </p>
-          <div className="flex items-center gap-1">
-            <button
-              onClick={prevPage}
-              disabled={!canPrev}
-              className="p-1.5 rounded-lg border border-app-border text-app opacity-60 hover:opacity-100 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
-              .reduce((acc, p, idx, arr) => {
-                if (idx > 0 && p - arr[idx - 1] > 1) acc.push("ellipsis-" + p);
-                acc.push(p);
-                return acc;
-              }, [])
-              .map((item) =>
-                typeof item === "string" ? (
-                  <span key={item} className="px-1 text-app opacity-30 text-xs">…</span>
-                ) : (
-                  <button
-                    key={item}
-                    onClick={() => goToPage(item)}
-                    className={cn(
-                      "min-w-[28px] h-7 rounded-lg text-xs font-medium transition-colors",
-                      item === page
-                        ? "bg-emerald-600 text-white"
-                        : "text-app opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10"
-                    )}
-                  >
-                    {item}
-                  </button>
-                )
-              )}
-            <button
-              onClick={nextPage}
-              disabled={!canNext}
-              className="p-1.5 rounded-lg border border-app-border text-app opacity-60 hover:opacity-100 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
+      {!loading && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          canPrev={canPrev}
+          canNext={canNext}
+          nextPage={nextPage}
+          prevPage={prevPage}
+          goToPage={goToPage}
+        />
       )}
 
       {/* Delete modal */}
