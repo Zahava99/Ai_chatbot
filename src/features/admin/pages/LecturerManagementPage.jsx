@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { fetchAdminUsers } from "@/features/admin/api/adminApi";
 import { getSubjects } from "@/api/subjectApi";
 import AddLecturerModal from "@/features/admin/components/AddLecturerModal";
+import { fetchAdminUsers, createAdminUser, setAdminUserActive } from "@/features/admin/api/adminApi";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -122,18 +123,23 @@ export default function LecturerManagementPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // ── local actions (optimistic) ─────────────────────────────────────────────
-  function handleBan(id) {
-    setLecturers((prev) =>
-      prev.map((l) =>
-        l.id === id ? { ...l, status: l.status === "banned" ? "active" : "banned" } : l
-      )
-    );
-    setOpenMenu(null);
-  }
-
-  function handleDelete(id) {
-    setLecturers((prev) => prev.filter((l) => l.id !== id));
+  // ── local actions (API connected) ─────────────────────────────────────────────
+  async function handleBan(id) {
+    const l = lecturers.find((x) => x.id === id);
+    if (!l) return;
+    const nextActive = l.status === "inactive" || l.status === "banned" ? true : false;
+    
+    try {
+      await setAdminUserActive(id, nextActive);
+      setLecturers((prev) =>
+        prev.map((x) =>
+          x.id === id ? { ...x, status: nextActive ? "active" : "inactive" } : x
+        )
+      );
+    } catch (err) {
+      console.error("[LecturerMgmt] Failed to toggle active status", err);
+      alert(err.message || "Failed to update lecturer status.");
+    }
     setOpenMenu(null);
   }
 
@@ -401,13 +407,7 @@ export default function LecturerManagementPage() {
                 className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-yellow-400 hover:bg-yellow-500/5 transition-colors"
               >
                 <Ban size={12} />
-                {l.status === "banned" ? "Unban Lecturer" : "Ban Lecturer"}
-              </button>
-              <button
-                onClick={() => handleDelete(l.id)}
-                className="flex items-center gap-2.5 w-full px-3 py-2 text-xs text-red-400 hover:bg-red-500/5 transition-colors"
-              >
-                <Trash2 size={12} /> Delete
+                {l.status === "inactive" || l.status === "banned" ? "Unban Lecturer" : "Ban Lecturer"}
               </button>
             </div>
           </>

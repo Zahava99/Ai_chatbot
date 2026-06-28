@@ -2,30 +2,49 @@ import axios from "axios";
 import { API_CONFIG } from "@/config/api";
 import { getAccessToken } from "@/features/auth/api/authUtils";
 
-const adminClient = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
-  timeout: API_CONFIG.TIMEOUT,
-});
+const MAX_USERS_PAGE_SIZE = 100;
 
-// Attach auth token to every request
-adminClient.interceptors.request.use((config) => {
-  const token = getAccessToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+async function parseErrorResponse(res, fallback) {
+  try {
+    const data = await res.json();
+    return data.detail ?? data.message ?? data.title ?? fallback;
+  } catch {
+    return fallback;
   }
-  return config;
-});
+}
 
 /**
  * GET /api/v1/admin/users
  * Returns a paginated list of all users.
  */
 export async function fetchAdminUsers({ page = 1, pageSize = 100, search = "" } = {}) {
-  const params = { page, pageSize };
-  if (search) params.search = search;
+  const safePage = Math.max(1, Number(page) || 1);
+  const safePageSize = Math.min(
+    MAX_USERS_PAGE_SIZE,
+    Math.max(1, Number(pageSize) || MAX_USERS_PAGE_SIZE)
+  );
+  let url = `${API_CONFIG.BASE_URL}/api/v1/admin/users?page=${safePage}&pageSize=${safePageSize}`;
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
 
-  const { data } = await adminClient.get("/api/v1/admin/users", { params });
-  return data; // { items, page, pageSize, totalCount, totalPages }
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAccessToken() ?? ""}`,
+    },
+  });
+
+  if (!res.ok) {
+    const message = await parseErrorResponse(
+      res,
+      `Failed to fetch users: ${res.status} ${res.statusText}`
+    );
+    throw new Error(message);
+  }
+
+  return res.json(); // { items, page, pageSize, totalCount, totalPages }
 }
 
 /**
@@ -34,14 +53,48 @@ export async function fetchAdminUsers({ page = 1, pageSize = 100, search = "" } 
  * @param {{ email: string, fullName: string, password: string, roles: string[] }} payload
  */
 export async function createAdminUser(payload) {
-  try {
-    const { data } = await adminClient.post("/api/v1/admin/users", payload);
-    return data;
-  } catch (err) {
-    // Extract server error message if available
-    const message =
-      err.response?.data?.message ??
-      `Failed to create user: ${err.response?.status ?? err.message}`;
+  const url = `${API_CONFIG.BASE_URL}/api/v1/admin/users`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAccessToken() ?? ""}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const message = await parseErrorResponse(
+      res,
+      `Failed to create user: ${res.status} ${res.statusText}`
+    );
     throw new Error(message);
   }
 }
+
+/**
+ * POST /api/v1/admin/users/:id/active
+ * Activates or deactivates a user.
+ */
+export async function setAdminUserActive(id, isActive) {
+  const url = `${API_CONFIG.BASE_URL}/api/v1/admin/users/${id}/active`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAccessToken() ?? ""}`,
+    },
+    body: JSON.stringify({ isActive }),
+  });
+
+  if (!res.ok) {
+    const message = await parseErrorResponse(
+      res,
+      `Failed to update user status: ${res.status} ${res.statusText}`
+    );
+    throw new Error(message);
+  }
+}
+
