@@ -390,7 +390,7 @@ export default function AppLayout() {
                   </div>
 
                   {/* menu items */}
-                  <div className="py-1">
+                  {/* <div className="py-1">
                     <button
                       onClick={() => { setDropdownOpen(false); navigate("/settings"); }}
                       className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
@@ -404,7 +404,7 @@ export default function AppLayout() {
                       <ExternalLink size={14} className="shrink-0" />
                       Documentation
                     </button>
-                  </div>
+                  </div> */}
 
                   <div className="border-t border-app-border py-1">
                     <button

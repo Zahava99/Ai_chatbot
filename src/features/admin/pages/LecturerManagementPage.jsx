@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
-import { Search, MoreVertical, Shield, BookOpen, Trash2, Ban, Activity, Mail, Phone, GraduationCap, Loader2, X, Eye, EyeOff } from "lucide-react";
+import { Search, MoreVertical, Shield, Trash2, Ban, Activity, Mail, GraduationCap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAdminUsers, createAdminUser } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import { getSubjects } from "@/api/subjectApi";
+import AddLecturerModal from "@/features/admin/components/AddLecturerModal";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -28,101 +30,89 @@ function initials(name = "") {
 // ─── constants ───────────────────────────────────────────────────────────────
 
 const STATUS_STYLES = {
-  active:   "text-emerald-400 bg-emerald-500/10",
+  active: "text-emerald-400 bg-emerald-500/10",
   inactive: "text-yellow-400 bg-yellow-500/10",
-  banned:   "text-red-400    bg-red-500/10",
+  banned: "text-red-400    bg-red-500/10",
 };
 
 const STATUS_DOT = {
-  active:   "bg-emerald-400",
+  active: "bg-emerald-400",
   inactive: "bg-yellow-400",
-  banned:   "bg-red-400",
+  banned: "bg-red-400",
 };
 
 const AVATAR_COLORS = [
   "bg-violet-500", "bg-blue-500", "bg-orange-500",
-  "bg-teal-500",   "bg-rose-500", "bg-indigo-500",
+  "bg-teal-500", "bg-rose-500", "bg-indigo-500",
 ];
 
 // ─── component ───────────────────────────────────────────────────────────────
 
 export default function LecturerManagementPage() {
   const [lecturers, setLecturers] = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
-  const [search, setSearch]       = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [openMenu, setOpenMenu]   = useState(null);
-  const [menuPos, setMenuPos]     = useState({ top: 0, left: 0 });
+  const [openMenu, setOpenMenu] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [activityUser, setActivityUser] = useState(null);
 
   // ── add lecturer modal ─────────────────────────────────────────────────────
   const [showAddModal, setShowAddModal] = useState(false);
-  const [addForm, setAddForm] = useState({ fullName: "", email: "", password: "" });
-  const [addLoading, setAddLoading] = useState(false);
-  const [addError, setAddError]     = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
 
-  function openAddModal() {
-    setAddForm({ fullName: "", email: "", password: "" });
-    setAddError(null);
-    setShowPassword(false);
-    setShowAddModal(true);
+  function handleLecturerCreated(newUser) {
+    setLecturers((prev) => [
+      ...prev,
+      {
+        id: newUser.id ?? Date.now(),
+        name: newUser.fullName ?? "—",
+        email: newUser.email ?? "—",
+        status: resolveStatus(newUser),
+        lastActive: fmtDate(newUser.lastLoginUtc),
+        phone: newUser.phone ?? null,
+        department: null,
+        subjects: null,
+        documents: null,
+      },
+    ]);
   }
 
-  async function handleAddLecturer(e) {
-    e.preventDefault();
-    setAddLoading(true);
-    setAddError(null);
-    try {
-      const newUser = await createAdminUser({
-        email:    addForm.email.trim(),
-        fullName: addForm.fullName.trim(),
-        password: addForm.password,
-        roles:    ["Researcher"],
-      });
-      // Optimistically add to list
-      setLecturers((prev) => [
-        ...prev,
-        {
-          id:         newUser.id ?? Date.now(),
-          name:       newUser.fullName ?? addForm.fullName.trim(),
-          email:      newUser.email    ?? addForm.email.trim(),
-          status:     resolveStatus(newUser),
-          lastActive: fmtDate(newUser.lastLoginUtc),
-          phone:      newUser.phone ?? null,
-          department: null,
-          courses:    null,
-          documents:  null,
-        },
-      ]);
-      setShowAddModal(false);
-    } catch (err) {
-      setAddError(err.message ?? "Something went wrong.");
-    } finally {
-      setAddLoading(false);
-    }
-  }
+  // ── subjects state ──────────────────────────────────────────────────────────
+  const [subjects, setSubjects] = useState([]);
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     setLoading(true);
-    fetchAdminUsers()
-      .then(({ items }) => {
+    Promise.all([fetchAdminUsers(), getSubjects()])
+      .then(([usersRes, subjectsData]) => {
+        const subjectsList = Array.isArray(subjectsData) ? subjectsData : [];
+        setSubjects(subjectsList);
+
+        const items = usersRes.items;
         const mapped = items
           .filter((u) => Array.isArray(u.roles) && u.roles.includes("Researcher"))
-          .map((u) => ({
-            id:          u.id,
-            name:        u.fullName ?? "—",
-            email:       u.email   ?? "—",
-            status:      resolveStatus(u),
-            lastActive:  fmtDate(u.lastLoginUtc),  // null if never logged in
-            // fields not yet provided by this API endpoint
-            phone:       u.phone ?? null,
-            department:  null,
-            courses:     null,
-            documents:   null,
-          }));
+          .map((u) => {
+            // Find subjects where this lecturer is an instructor
+            const userSubjects = subjectsList.filter((s) =>
+              Array.isArray(s.instructors) &&
+              s.instructors.some((inst) => inst.id === u.id || inst.userId === u.id)
+            );
+            const subjectCodes = userSubjects.map((s) => s.code).filter(Boolean);
+            const totalDocs = userSubjects.reduce((sum, s) => sum + (s.documentCount ?? 0), 0);
+
+            return {
+              id: u.id,
+              name: u.fullName ?? "—",
+              email: u.email ?? "—",
+              status: resolveStatus(u),
+              lastActive: fmtDate(u.lastLoginUtc),
+              phone: u.phone ?? null,
+              department: null,
+              subjects: subjectCodes.length > 0 ? subjectCodes.join(", ") : null,
+              documents: totalDocs > 0 ? totalDocs : null,
+            };
+          });
         setLecturers(mapped);
       })
       .catch((err) => {
@@ -148,20 +138,28 @@ export default function LecturerManagementPage() {
   }
 
   // ── derived ────────────────────────────────────────────────────────────────
-  const filtered = lecturers.filter((l) => {
-    const q = search.toLowerCase();
-    const matchSearch =
-      l.name.toLowerCase().includes(q) ||
-      l.email.toLowerCase().includes(q);
-    const matchStatus = filterStatus === "all" || l.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
+  const filtered = lecturers
+    .filter((l) => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        l.name.toLowerCase().includes(q) ||
+        l.email.toLowerCase().includes(q);
+      const matchStatus = filterStatus === "all" || l.status === filterStatus;
+      return matchSearch && matchStatus;
+    })
+    .sort((a, b) => {
+      // Lecturers with subjects come first, then sort by document count descending
+      const aHasSubject = a.subjects ? 1 : 0;
+      const bHasSubject = b.subjects ? 1 : 0;
+      if (bHasSubject !== aHasSubject) return bHasSubject - aHasSubject;
+      return (b.documents ?? 0) - (a.documents ?? 0);
+    });
 
   const stats = [
-    { label: "Total Lecturers", value: lecturers.length,                                     color: "text-app" },
-    { label: "Active",          value: lecturers.filter((l) => l.status === "active").length, color: "text-emerald-400" },
-    { label: "Inactive",        value: lecturers.filter((l) => l.status === "inactive").length, color: "text-yellow-400" },
-    { label: "Banned",          value: lecturers.filter((l) => l.status === "banned").length,  color: "text-red-400" },
+    { label: "Total Lecturers", value: lecturers.length, color: "text-app" },
+    { label: "Active", value: lecturers.filter((l) => l.status === "active").length, color: "text-emerald-400" },
+    { label: "Inactive", value: lecturers.filter((l) => l.status === "inactive").length, color: "text-yellow-400" },
+    { label: "Banned", value: lecturers.filter((l) => l.status === "banned").length, color: "text-red-400" },
   ];
 
   // ── render ─────────────────────────────────────────────────────────────────
@@ -177,7 +175,7 @@ export default function LecturerManagementPage() {
           </p>
         </div>
         <button
-          onClick={openAddModal}
+          onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors shadow-sm shadow-emerald-900/20"
         >
           <GraduationCap size={15} />
@@ -231,7 +229,8 @@ export default function LecturerManagementPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-app-border">
-              {["Lecturer", "Contact", "Department", "Status", "Courses", "Documents", ""].map((h) => (
+              {/* {["Lecturer", "Contact", "Department", "Status", "Courses", "Documents", ""].map((h) => ( */}
+              {["Lecturer", "Contact", "Status", "Subjects","Documents", ""].map((h) => (
                 <th key={h} className="text-left px-5 py-3 text-xs text-app opacity-40 font-medium whitespace-nowrap">
                   {h}
                 </th>
@@ -299,15 +298,15 @@ export default function LecturerManagementPage() {
                       <Mail size={11} className="shrink-0" />
                       {l.email}
                     </span>
-                    <span className="flex items-center gap-1.5 text-xs text-app opacity-40">
+                    {/* <span className="flex items-center gap-1.5 text-xs text-app opacity-40">
                       <Phone size={11} className="shrink-0" />
                       {l.phone ?? <span className="opacity-50">—</span>}
-                    </span>
+                    </span> */}
                   </div>
                 </td>
 
-                {/* Department — not in API */}
-                <td className="px-5 py-3">
+                {/* Department */}
+                {/* <td className="px-5 py-3">
                   {l.department ? (
                     <span className="flex items-center gap-1.5 text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full w-fit font-medium">
                       <BookOpen size={11} />
@@ -316,7 +315,7 @@ export default function LecturerManagementPage() {
                   ) : (
                     <span className="text-xs text-app opacity-25">—</span>
                   )}
-                </td>
+                </td> */}
 
                 {/* Status */}
                 <td className="px-5 py-3">
@@ -329,11 +328,25 @@ export default function LecturerManagementPage() {
                   </span>
                 </td>
 
-                {/* Courses — not in API */}
-                <td className="px-5 py-3 text-xs text-app opacity-25">—</td>
+                {/* Subjects */}
+                <td className="px-5 py-3">
+                  {l.subjects ? (
+                    <span className="text-xs text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-full font-medium">
+                      {l.subjects}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-app opacity-25">—</span>
+                  )}
+                </td>
 
-                {/* Documents — not in API */}
-                <td className="px-5 py-3 text-xs text-app opacity-25">—</td>
+                {/* Documents */}
+                <td className="px-5 py-3">
+                  {l.documents ? (
+                    <span className="text-xs text-app opacity-60">{l.documents}</span>
+                  ) : (
+                    <span className="text-xs text-app opacity-25">—</span>
+                  )}
+                </td>
 
                 {/* Actions */}
                 <td className="px-5 py-3">
@@ -435,100 +448,11 @@ export default function LecturerManagementPage() {
       )}
 
       {/* Add Lecturer Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-panel border border-app-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <p className="text-sm font-semibold text-app">Add Lecturer</p>
-                <p className="text-xs text-app opacity-40 mt-0.5">Creates a new account with the Researcher role</p>
-              </div>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-app opacity-40 hover:opacity-80 transition-opacity p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            {/* Form */}
-            <form onSubmit={handleAddLecturer} className="flex flex-col gap-4">
-              {/* Full Name */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-app opacity-60 font-medium">Full Name</label>
-                <input
-                  required
-                  type="text"
-                  placeholder="e.g. Dr. Jane Smith"
-                  value={addForm.fullName}
-                  onChange={(e) => setAddForm((f) => ({ ...f, fullName: e.target.value }))}
-                  className="px-3 py-2.5 rounded-xl border border-app-border bg-black/5 dark:bg-white/5 text-sm text-app placeholder:opacity-30 outline-none focus:border-emerald-500/50 transition-colors"
-                />
-              </div>
-
-              {/* Email */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-app opacity-60 font-medium">Email</label>
-                <input
-                  required
-                  type="email"
-                  placeholder="lecturer@example.com"
-                  value={addForm.email}
-                  onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))}
-                  className="px-3 py-2.5 rounded-xl border border-app-border bg-black/5 dark:bg-white/5 text-sm text-app placeholder:opacity-30 outline-none focus:border-emerald-500/50 transition-colors"
-                />
-              </div>
-
-              {/* Password */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-app opacity-60 font-medium">Password</label>
-                <div className="relative">
-                  <input
-                    required
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Min. 8 characters"
-                    value={addForm.password}
-                    onChange={(e) => setAddForm((f) => ({ ...f, password: e.target.value }))}
-                    className="w-full px-3 py-2.5 pr-10 rounded-xl border border-app-border bg-black/5 dark:bg-white/5 text-sm text-app placeholder:opacity-30 outline-none focus:border-emerald-500/50 transition-colors"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-app opacity-40 hover:opacity-70 transition-opacity"
-                  >
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Error */}
-              {addError && (
-                <p className="text-xs text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">{addError}</p>
-              )}
-
-              {/* Actions */}
-              <div className="flex items-center gap-3 mt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={addLoading}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
-                >
-                  {addLoading && <Loader2 size={13} className="animate-spin" />}
-                  {addLoading ? "Creating…" : "Add Lecturer"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddLecturerModal
+        show={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onCreated={handleLecturerCreated}
+      />
 
     </div>
   );

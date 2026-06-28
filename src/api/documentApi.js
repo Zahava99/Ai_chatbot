@@ -61,7 +61,7 @@ export async function uploadDocument(file, subjectId, chapterId, title, onProgre
  * @param {number} pageSize - Number of items per page (default: 20)
  * @returns {Promise<Object>} The documents response data
  */
-export async function getDocuments(page = 1, pageSize = 20) {
+export async function getDocuments(page = 1, pageSize = 10) {
   const url = `${API_CONFIG.BASE_URL}/api/v1/documents?page=${page}&pageSize=${pageSize}`;
 
   const response = await fetch(url, {

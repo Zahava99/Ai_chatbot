@@ -33,7 +33,7 @@ export async function login(email, password) {
 
   const data = await response.json();
   storeTokens(data);
-  console.log(data);
+  // console.log(data);
   return data;
 }
 

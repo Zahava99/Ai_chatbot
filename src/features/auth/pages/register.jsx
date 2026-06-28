@@ -20,8 +20,7 @@ export default function RegisterPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!passwordsMatch) return;
-    // TODO: connect to auth API
-    console.log({ role, fullName, email, password, confirmPassword });
+    // console.log({ role, fullName, email, password, confirmPassword });
   };
 
   return (
