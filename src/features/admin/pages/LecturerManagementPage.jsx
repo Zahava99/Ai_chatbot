@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { fetchAdminUsers } from "@/features/admin/api/adminApi";
 import { getSubjects } from "@/api/subjectApi";
 import AddLecturerModal from "@/features/admin/components/AddLecturerModal";
-import { fetchAdminUsers, createAdminUser, setAdminUserActive } from "@/features/admin/api/adminApi";
+import { createAdminUser, setAdminUserActive } from "@/features/admin/api/adminApi";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
