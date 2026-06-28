@@ -3,6 +3,8 @@ import { Search, MoreVertical, Trash2, Ban, Activity, Mail, Phone, BookOpen, Gra
 import { cn } from "@/lib/utils";
 import { fetchAdminUsers, setAdminUserActive } from "@/features/admin/api/adminApi";
 import AddStudentModal from "@/features/admin/components/AddStudentModal";
+import usePagination from "@/hook/usePagination";
+import Pagination from "@/components/common/Pagination";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -49,6 +51,7 @@ const AVATAR_COLORS = [
 
 export default function StudentManagementPage() {
   const [students, setStudents] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
@@ -59,6 +62,8 @@ export default function StudentManagementPage() {
 
   // ── add student modal ──────────────────────────────────────────────────────
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const { page, pageSize, totalPages, canPrev, canNext, nextPage, prevPage, goToPage } = usePagination({ totalCount, pageSize: 10 });
 
   function handleStudentCreated(newUser) {
     setStudents((prev) => [
@@ -82,8 +87,8 @@ export default function StudentManagementPage() {
   // ── fetch ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     setLoading(true);
-    fetchAdminUsers()
-      .then(({ items }) => {
+    fetchAdminUsers({ page, pageSize, search })
+      .then(({ items, totalCount: total }) => {
         const mapped = items
           .filter((u) => Array.isArray(u.roles) && u.roles.includes("Student"))
           .map((u) => ({
@@ -100,13 +105,14 @@ export default function StudentManagementPage() {
             documents: u.documents ?? 0,
           }));
         setStudents(mapped);
+        setTotalCount(total ?? 0);
       })
       .catch((err) => {
         console.error("[StudentMgmt]", err);
         setError("Failed to load students.");
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, pageSize, search]);
 
   // ── local actions (API connected) ─────────────────────────────────────────────
   async function handleBan(id) {
@@ -382,11 +388,19 @@ export default function StudentManagementPage() {
         );
       })()}
 
-      {/* Footer */}
-      {!loading && filtered.length > 0 && (
-        <p className="text-xs text-app opacity-30 mt-3 text-right">
-          Showing {filtered.length} of {students.length} students
-        </p>
+      {/* Pagination */}
+      {!loading && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          canPrev={canPrev}
+          canNext={canNext}
+          nextPage={nextPage}
+          prevPage={prevPage}
+          goToPage={goToPage}
+        />
       )}
 
       {/* Activity Modal */}

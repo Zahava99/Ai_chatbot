@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { Search, MoreVertical, Shield, Trash2, Ban, Activity, Mail, GraduationCap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers, setAdminUserActive } from "@/features/admin/api/adminApi";
 import { getSubjects } from "@/api/subjectApi";
 import AddLecturerModal from "@/features/admin/components/AddLecturerModal";
-import { createAdminUser, setAdminUserActive } from "@/features/admin/api/adminApi";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -128,7 +127,7 @@ export default function LecturerManagementPage() {
     const l = lecturers.find((x) => x.id === id);
     if (!l) return;
     const nextActive = l.status === "inactive" || l.status === "banned" ? true : false;
-    
+
     try {
       await setAdminUserActive(id, nextActive);
       setLecturers((prev) =>
@@ -235,8 +234,7 @@ export default function LecturerManagementPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-app-border">
-              {/* {["Lecturer", "Contact", "Department", "Status", "Courses", "Documents", ""].map((h) => ( */}
-              {["Lecturer", "Contact", "Status", "Subjects","Documents", ""].map((h) => (
+              {["Lecturer", "Contact", "Status", "Subjects", "Documents", ""].map((h) => (
                 <th key={h} className="text-left px-5 py-3 text-xs text-app opacity-40 font-medium whitespace-nowrap">
                   {h}
                 </th>
@@ -248,7 +246,7 @@ export default function LecturerManagementPage() {
             {/* loading skeleton */}
             {loading && (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center">
+                <td colSpan={6} className="px-5 py-12 text-center">
                   <div className="flex items-center justify-center gap-2 text-sm text-app opacity-40">
                     <Loader2 size={15} className="animate-spin" />
                     Loading lecturers…
@@ -260,7 +258,7 @@ export default function LecturerManagementPage() {
             {/* error */}
             {!loading && error && (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-sm text-red-400 opacity-70">
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-red-400 opacity-70">
                   {error}
                 </td>
               </tr>
@@ -269,7 +267,7 @@ export default function LecturerManagementPage() {
             {/* empty */}
             {!loading && !error && filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-5 py-12 text-center text-sm text-app opacity-30">
+                <td colSpan={6} className="px-5 py-12 text-center text-sm text-app opacity-30">
                   No lecturers found.
                 </td>
               </tr>
@@ -304,24 +302,8 @@ export default function LecturerManagementPage() {
                       <Mail size={11} className="shrink-0" />
                       {l.email}
                     </span>
-                    {/* <span className="flex items-center gap-1.5 text-xs text-app opacity-40">
-                      <Phone size={11} className="shrink-0" />
-                      {l.phone ?? <span className="opacity-50">—</span>}
-                    </span> */}
                   </div>
                 </td>
-
-                {/* Department */}
-                {/* <td className="px-5 py-3">
-                  {l.department ? (
-                    <span className="flex items-center gap-1.5 text-xs text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-full w-fit font-medium">
-                      <BookOpen size={11} />
-                      {l.department}
-                    </span>
-                  ) : (
-                    <span className="text-xs text-app opacity-25">—</span>
-                  )}
-                </td> */}
 
                 {/* Status */}
                 <td className="px-5 py-3">

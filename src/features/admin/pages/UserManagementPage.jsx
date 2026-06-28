@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Search, MoreVertical, Shield, User, Trash2, Ban, Activity, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import usePagination from "@/hook/usePagination";
+import Pagination from "@/components/common/Pagination";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -59,17 +61,20 @@ const AVATAR_COLORS = [
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [openMenu, setOpenMenu] = useState(null);
   const [activityUser, setActivityUser] = useState(null);
 
+  const { page, pageSize, totalPages, canPrev, canNext, nextPage, prevPage, goToPage } = usePagination({ totalCount, pageSize: 10 });
+
   // ── fetch users from API ───────────────────────────────────────────────────
   useEffect(() => {
     setLoading(true);
-    fetchAdminUsers()
-      .then(({ items }) => {
+    fetchAdminUsers({ page, pageSize, search })
+      .then(({ items, totalCount: total }) => {
         const mapped = items.map((u) => ({
           id: u.id,
           name: u.fullName ?? "—",
@@ -80,13 +85,14 @@ export default function UserManagementPage() {
           questions: u.questions ?? 0,
         }));
         setUsers(mapped);
+        setTotalCount(total ?? 0);
       })
       .catch((err) => {
         console.error("[UserMgmt]", err);
         setError("Failed to load users.");
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [page, pageSize, search]);
 
   // ── local actions (optimistic) ─────────────────────────────────────────────
   function handleBan(id) {
@@ -102,10 +108,7 @@ export default function UserManagementPage() {
   }
 
   // ── derived ────────────────────────────────────────────────────────────────
-  const filtered = users.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = users;
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -248,11 +251,19 @@ export default function UserManagementPage() {
         </table>
       </div>
 
-      {/* Footer */}
-      {!loading && filtered.length > 0 && (
-        <p className="text-xs text-app opacity-30 mt-3 text-right">
-          Showing {filtered.length} of {users.length} users
-        </p>
+      {/* Pagination */}
+      {!loading && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          canPrev={canPrev}
+          canNext={canNext}
+          nextPage={nextPage}
+          prevPage={prevPage}
+          goToPage={goToPage}
+        />
       )}
 
       {/* Activity modal */}
