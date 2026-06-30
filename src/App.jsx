@@ -14,6 +14,7 @@ import RegisterPage from "@/features/auth/pages/register";
 import ForgotPasswordPage from "@/features/auth/pages/forgotPassword";
 import OnboardingPage from "@/features/auth/pages/onboarding";
 import ChangePasswordPage from "@/features/auth/pages/changePassword";
+import SetupAccountPage from "@/features/auth/pages/setupAccount";
 
 // ── Dashboard ──
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
@@ -104,6 +105,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/change-password" element={<ChangePasswordPage />} />
+          <Route path="/setup-account" element={<SetupAccountPage />} />
 
           {/* ── Legacy notebook routes ── */}
           <Route path="/" element={<MainPage />} />

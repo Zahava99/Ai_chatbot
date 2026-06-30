@@ -71,6 +71,8 @@ export async function createAdminUser(payload) {
     );
     throw new Error(message);
   }
+
+  return res.json();
 }
 
 /**

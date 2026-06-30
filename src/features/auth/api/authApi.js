@@ -140,6 +140,38 @@ export async function refreshToken() {
 }
 
 /**
+ * POST /api/v1/admin/users/confirm-and-setup-password
+ * Activates a new account using the email confirmation code and sets the initial password.
+ *
+ * @param {string} email
+ * @param {string} code - Confirmation code from the activation email
+ * @param {string} newPassword
+ * @returns {Promise<{ message: string }>}
+ */
+export async function confirmAndSetupPassword(email, code, newPassword) {
+  const response = await fetch(`${API_CONFIG.BASE_URL}/api/v1/admin/users/confirm-and-setup-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+
+  if (!response.ok) {
+    let message = `Account setup failed (${response.status})`;
+    try {
+      const err = await response.json();
+      message = err.detail ?? err.message ?? message;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(message);
+  }
+
+  return response.json();
+}
+
+/**
  * POST /api/v1/auth/logout
  * Invalidates the session on the server. Requires the current access token.
  * The refresh token is sent in the body so the server can revoke it too.

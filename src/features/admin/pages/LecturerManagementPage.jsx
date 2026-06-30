@@ -62,6 +62,7 @@ export default function LecturerManagementPage() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   function handleLecturerCreated(newUser) {
+    if (!newUser) return;
     setLecturers((prev) => [
       ...prev,
       {
