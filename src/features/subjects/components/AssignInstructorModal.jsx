@@ -25,7 +25,7 @@ export default function AssignInstructorModal({ subjectId, onClose }) {
       const data = await fetchAdminUsers({ page: 1, pageSize: 20, search: query });
       // Only show users with the "Lecturer" role
       const researchers = (data.items || []).filter((u) =>
-        (u.roles || []).some((r) => r.toLowerCase() === "researcher")
+        (u.roles || []).some((r) => r.toLowerCase() === "instructor")
       );
       setUsers(researchers);
     } catch (err) {
@@ -52,12 +52,14 @@ export default function AssignInstructorModal({ subjectId, onClose }) {
       await useSubjectStore.getState().refetchSubjects();
       setSuccess(`${user.fullName || user.email} assigned successfully.`);
     } catch (err) {
-      setError(err.message);
+      setError(err.response.data.detail);
+      console.log("Assign error:", err);
+      console.log("Error message:", err.message);
+      console.log("Error response:", err.response);
     } finally {
       setAssigning(null);
     }
   };
-
   const handleUnassign = async (user) => {
     setUnassigning(user.id);
     setError(null);

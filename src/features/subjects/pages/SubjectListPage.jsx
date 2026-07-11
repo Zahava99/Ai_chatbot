@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, FileText, Layers, MoreVertical, AlertCircle } from "lucide-react";
 import useSubjectStore from "@/stores/useSubjectStore";
-import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+// import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 
 // Cycles through accent colours for subject cards
 const ACCENT_COLORS = [

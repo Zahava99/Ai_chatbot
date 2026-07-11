@@ -7,7 +7,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
-import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+// import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import useAuthStore from "@/stores/useAuthStore";
 import usePagination from "@/hook/usePagination";
 import Pagination from "@/components/common/Pagination";

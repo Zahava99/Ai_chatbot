@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FileText, Layers, MoreVertical, Search, AlertCircle } from "lucide-react";
 import useSubjectStore from "@/stores/useSubjectStore";
 import useAuthStore from "@/stores/useAuthStore";
-import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+// import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 
 const ACCENT_COLORS = [
   "bg-blue-500/10 text-blue-400",

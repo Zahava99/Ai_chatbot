@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useAuthStore from "@/stores/useAuthStore";
-import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+// import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import { getDocuments } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
 

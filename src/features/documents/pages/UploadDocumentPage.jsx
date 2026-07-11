@@ -4,7 +4,7 @@ import { Upload, FileText, X, CheckCircle2, Loader2, AlertCircle, ChevronDown, R
 import { cn } from "@/lib/utils";
 import { uploadDocument } from "@/api/documentApi";
 import { getSubjects, getChapters } from "@/api/subjectApi";
-import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
+// import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import useAuthStore from "@/stores/useAuthStore";
 
 const ACCEPTED = [".pdf", ".docx", ".pptx"];
