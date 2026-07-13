@@ -1,5 +1,5 @@
-import { API_CONFIG, getAuthHeaders } from "../config/api";
-import { getAccessToken } from "@/features/auth/api/authUtils";
+import { API_CONFIG } from "../config/api";
+import { getAccessToken, getAuthHeaders } from "@/features/auth/utills/authUtils";
 
 /**
  * Upload a document via multipart/form-data.
@@ -99,7 +99,7 @@ export async function getDocumentById(id) {
 /**
  * Trigger re-indexing of a document.
  * @param {number|string} id - Document ID
- * @returns {Promise<Object>} The response data
+ * @returns {Promise<Object|null>} The response data or null if no content
  */
 export async function reindexDocument(id) {
   const url = `${API_CONFIG.BASE_URL}/api/v1/documents/${id}/reindex`;
@@ -113,7 +113,8 @@ export async function reindexDocument(id) {
     throw new Error(`Failed to reindex document: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { MessageSquare, PanelLeftClose, PanelLeftOpen, Plus, RefreshCw, Trash2 } from "lucide-react";
-import { fetchSessions, deleteChatSession, createChatSession } from "@/features/chatbot/api/sessionApi";
+import { fetchSessions, deleteChatSession } from "@/features/chatbot/api/sessionApi";
 import { cn } from "@/lib/utils";
 
 // TEMPORARY: Sources upload UI is commented out.
@@ -49,30 +49,10 @@ export default function SourcesPanel({
     });
   }, [newlyCreatedSession]);
 
-  const handleNewChat = async () => {
-    if (!subjectId) return;
-    try {
-      const { id } = await createChatSession(subjectId, "New conversation");
-      // Add the new session to the local list and select it
-      const newSession = {
-        id,
-        subjectId,
-        title: "New conversation",
-        date: new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }),
-        time: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-      setSessions((prev) => [newSession, ...prev]);
-      onSelectSession?.(id);
-    } catch (err) {
-      console.error("Failed to create session:", err);
-    }
+  const handleNewChat = () => {
+    // Just clear the active session — chatBotPanel will create the session
+    // on the first message, using the question as the title.
+    onSelectSession?.(null);
   };
 
   const handleDelete = async (sessionId) => {

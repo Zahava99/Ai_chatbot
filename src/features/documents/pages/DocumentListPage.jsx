@@ -5,7 +5,7 @@ import {
   ChevronDown, MoreVertical, Eye, Trash2, RefreshCw, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getDocuments, deleteDocument } from "@/api/documentApi";
+import { getDocuments, deleteDocument, reindexDocument } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
 // import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import useAuthStore from "@/stores/useAuthStore";
@@ -58,6 +58,7 @@ export default function DocumentListPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [reindexingId, setReindexingId] = useState(null);
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
 
@@ -128,6 +129,18 @@ export default function DocumentListPage() {
     }
   };
 
+  const handleReindex = async (docId) => {
+    try {
+      setReindexingId(docId);
+      await reindexDocument(docId);
+      fetchDocuments();
+    } catch (err) {
+      console.error("Failed to reindex document:", err);
+    } finally {
+      setReindexingId(null);
+    }
+  };
+
   const filtered = docs.filter((d) =>
     (d.originalFileName || "").toLowerCase().includes(search.toLowerCase()) ||
     (d.title || "").toLowerCase().includes(search.toLowerCase())
@@ -152,7 +165,7 @@ export default function DocumentListPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Must Change Password Banner */}
-      <MustChangePasswordBanner />
+        {/* <MustChangePasswordBanner /> */}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -244,7 +257,7 @@ export default function DocumentListPage() {
                     {openMenu === doc.id && (
                       <DocMenu
                         onView={() => { navigate(`/documents_upload/${doc.id}`); setOpenMenu(null); }}
-                        onReindex={() => { navigate(`/documents_upload/${doc.id}/reindex`); setOpenMenu(null); }}
+                        onReindex={() => { handleReindex(doc.id); setOpenMenu(null); }}
                         onDelete={() => { setDeleteModal(doc); setOpenMenu(null); }}
                       />
                     )}

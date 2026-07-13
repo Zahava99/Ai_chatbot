@@ -191,13 +191,30 @@ export default function DashboardPage() {
           subjectMap[s.id] = s.name;
         });
 
+        // Filter subjects assigned to current user (instructor)
+        const userId = user?.id;
+        const userSubjects = userId
+          ? subjects.filter((s) =>
+              s.instructors?.some((ins) => ins.id === userId || ins.userId === userId)
+            )
+          : subjects;
+
+        // Filter documents belonging to user's subjects
+        const userSubjectIds = new Set(userSubjects.map((s) => s.id));
+        const userDocs = userId
+          ? docs.filter((d) => userSubjectIds.has(d.subjectId))
+          : docs;
+
+        const totalDocCount = userDocs.length;
+        const totalSubjectCount = userSubjects.length;
+
         // Populate stats
         const computedStats = [
           {
             icon: FileText,
             label: "Tổng tài liệu",
-            value: String(docsData.totalCount || docs.length),
-            sub: `${subjects.length} subjects`,
+            value: String(totalDocCount),
+            sub: `${totalSubjectCount} môn học`,
             delta: "",
             deltaLabel: "",
             up: null,
@@ -244,8 +261,9 @@ export default function DashboardPage() {
         ];
         setStats(computedStats);
 
-        // Recent Uploads
-        const mappedUploads = docs.slice(0, 5).map((d) => {
+        // Recent Uploads — show only docs belonging to user's subjects
+        const uploadsToShow = userId ? userDocs.slice(0, 5) : docs.slice(0, 5);
+        const mappedUploads = uploadsToShow.map((d) => {
           let sizeStr = "—";
           if (d.sizeBytes) {
             const kb = d.sizeBytes / 1024;
@@ -280,7 +298,7 @@ export default function DashboardPage() {
     }
 
     loadData();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (
@@ -344,7 +362,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Must Change Password Banner ── */}
-      <MustChangePasswordBanner />
+      {/* <MustChangePasswordBanner /> */}
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

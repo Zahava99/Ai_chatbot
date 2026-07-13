@@ -1,5 +1,5 @@
 import { API_CONFIG } from "@/config/api";
-import { getAccessToken, getRefreshToken, storeTokens } from "@/features/auth/api/authUtils";
+import { getAccessToken, getRefreshToken, storeTokens } from "@/features/auth/utills/authUtils";
 
 const AUTH_BASE = `${API_CONFIG.BASE_URL}/api/v1/auth`;
 
@@ -140,25 +140,24 @@ export async function refreshToken() {
 }
 
 /**
- * POST /api/v1/admin/users/confirm-and-setup-password
- * Activates a new account using the email confirmation code and sets the initial password.
+ * POST /api/v1/admin/users/confirm-email
+ * Confirms a new account using the email confirmation code.
  *
  * @param {string} email
  * @param {string} code - Confirmation code from the activation email
- * @param {string} newPassword
  * @returns {Promise<{ message: string }>}
  */
-export async function confirmAndSetupPassword(email, code, newPassword) {
-  const response = await fetch(`${API_CONFIG.BASE_URL}/api/v1/admin/users/confirm-and-setup-password`, {
+export async function confirmEmail(email, code) {
+  const response = await fetch(`${API_CONFIG.BASE_URL}/api/v1/admin/users/confirm-email`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ email, code, newPassword }),
+    body: JSON.stringify({ email, code }),
   });
 
   if (!response.ok) {
-    let message = `Account setup failed (${response.status})`;
+    let message = `Email confirmation failed (${response.status})`;
     try {
       const err = await response.json();
       message = err.detail ?? err.message ?? message;

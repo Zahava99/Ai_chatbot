@@ -121,7 +121,7 @@ function App() {
             </Route> */}
 
             {/* ── Lecturer + Admin only ── */}
-            <Route element={<RoleGuard allowed={["researcher", "admin"]} />}>
+            <Route element={<RoleGuard allowed={["instructor", "admin"]} />}>
               {/* Documents */}
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/documents" element={<DocumentListPage />} />

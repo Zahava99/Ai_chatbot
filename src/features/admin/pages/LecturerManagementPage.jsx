@@ -92,7 +92,7 @@ export default function LecturerManagementPage() {
 
         const items = usersRes.items;
         const mapped = items
-          .filter((u) => Array.isArray(u.roles) && u.roles.includes("Researcher"))
+          .filter((u) => Array.isArray(u.roles) && u.roles.includes("Instructor"))
           .map((u) => {
             // Find subjects where this lecturer is an instructor
             const userSubjects = subjectsList.filter((s) =>

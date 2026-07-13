@@ -11,7 +11,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
 import useAuthStore from "@/stores/useAuthStore";
-import { clearTokens } from "@/features/auth/api/authUtils";
+import { clearTokens } from "@/features/auth/utills/authUtils";
 import { logout as logoutApi } from "@/features/auth/api/authApi";
 
 export default function Header() {

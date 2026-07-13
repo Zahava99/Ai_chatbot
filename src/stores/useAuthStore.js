@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getAccessToken } from "@/features/auth/api/authUtils";
+import { getAccessToken } from "@/features/auth/utills/authUtils";
 import { getMe } from "@/features/auth/api/authApi";
 
 const useAuthStore = create((set) => ({

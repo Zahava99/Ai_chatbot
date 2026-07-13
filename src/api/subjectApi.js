@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_CONFIG } from "@/config/api";
-import { getAccessToken } from "@/features/auth/api/authUtils";
+import { getAccessToken } from "@/features/auth/utills/authUtils";
 
 const subjectClient = axios.create({
   baseURL: API_CONFIG.BASE_URL,

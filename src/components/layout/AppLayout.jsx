@@ -4,7 +4,7 @@ import {
   LayoutDashboard, MessageSquare, FileText,
   FlaskConical, BarChart3, History, LineChart, Settings,
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
-  Sun, Monitor, User, HelpCircle, ExternalLink,
+  Sun, Monitor, User, HelpCircle, ExternalLink, KeyRound,
   Database, GraduationCap, Users, BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ import { useTheme } from "@/context/ThemeContext";
 import NotificationCenter from "@/features/notifications/NotificationCenter";
 import useAuthStore from "@/stores/useAuthStore";
 import { hasRole } from "@/components/common/RoleGuard";
-import { clearTokens, isTokenExpired, ensureFreshToken } from "@/features/auth/api/authUtils";
+import { clearTokens, isTokenExpired, ensureFreshToken } from "@/features/auth/utills/authUtils";
 import { logout as logoutApi } from "@/features/auth/api/authApi";
 
 /* ─── nav structure ──────────────────────────────────────────── */
@@ -21,7 +21,7 @@ const NAV_GROUPS = [
   {
     label: "Main",
     items: [
-      { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["researcher"] },
+      { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", roles: ["instructor"] },
       // { to: "/chat",      icon: MessageSquare,   label: "Chat",      badge: "3" },
       { to: "/admin",     icon: Monitor,         label: "Admin",     roles: ["admin"], end: true },
     ],
@@ -29,9 +29,9 @@ const NAV_GROUPS = [
   {
     label: "Document Management",
     items: [
-      { to: "/documents",        icon: FileText,  label: "Tài liệu", roles: ["researcher"]},
-      { to: "/subjects",         icon: BookOpen,  label: "Môn học", roles: ["researcher"] },
-      { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu", roles: ["researcher"] },
+      { to: "/documents",        icon: FileText,  label: "Tài liệu", roles: ["instructor"]},
+      { to: "/subjects",         icon: BookOpen,  label: "Môn học", roles: ["instructor"] },
+      { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu", roles: ["instructor"] },
       { to: "/admin/subjects",         icon: BookOpen,  label: "Môn học", roles: ["admin"] },
       { to: "/admin/documents",         icon: BookOpen,  label: "Tài liệu", roles: ["admin"] },
     ],
@@ -405,6 +405,16 @@ export default function AppLayout() {
                       Documentation
                     </button>
                   </div> */}
+
+                  <div className="py-1">
+                    <button
+                      onClick={() => { setDropdownOpen(false); navigate("/change-password"); }}
+                      className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                    >
+                      <KeyRound size={14} className="shrink-0" />
+                      Change Password
+                    </button>
+                  </div>
 
                   <div className="border-t border-app-border py-1">
                     <button

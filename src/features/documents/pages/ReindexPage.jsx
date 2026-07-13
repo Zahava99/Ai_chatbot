@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { RefreshCw, ChevronRight, ChevronDown } from "lucide-react";
+import { reindexDocument } from "@/api/documentApi";
 
 const MODELS = ["multilingual-e5-base", "bge-m3", "PhoBERT", "OpenAI text-embedding-3-small"];
 const STRATEGIES = ["Fixed chunk", "Semantic chunk", "Recursive chunk"];
@@ -12,6 +13,21 @@ export default function ReindexPage() {
   const [overlap, setOverlap] = useState(64);
   const [model, setModel] = useState(MODELS[0]);
   const [strategy, setStrategy] = useState(STRATEGIES[0]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleReindex = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await reindexDocument(id);
+      navigate("/documents_upload/processing");
+    } catch (err) {
+      setError(err.message || "Failed to re-index document");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-lg mx-auto">
@@ -102,15 +118,23 @@ export default function ReindexPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-sm text-red-400">
+          {error}
+        </div>
+      )}
+
       <div className="flex gap-3 mt-5">
         <button onClick={() => navigate(`/documents_upload/${id}`)} className="flex-1 py-2.5 rounded-xl border border-app-border text-sm text-app opacity-70 hover:opacity-100 transition-colors">
           Cancel
         </button>
         <button
-          onClick={() => navigate("/documents_upload/processing")}
-          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium transition-colors"
+          onClick={handleReindex}
+          disabled={loading}
+          className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
         >
-          <RefreshCw size={14} /> Start Re-index
+          <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          {loading ? "Re-indexing..." : "Start Re-index"}
         </button>
       </div>
     </div>
