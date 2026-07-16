@@ -296,13 +296,14 @@ export default function ExperimentHistoryPage() {
             value={selectedExperimentId}
             onChange={handleExperimentChange}
             disabled={loadingExperiments || experiments.length === 0}
-            className="w-full px-4 py-2.5 rounded-xl border border-app-border bg-black/5 dark:bg-white/5 text-sm text-app outline-none appearance-none focus:border-emerald-500 transition disabled:opacity-50"
+            className="w-full px-4 py-2.5 rounded-xl border border-app-border text-sm text-app outline-none appearance-none focus:border-emerald-500 transition disabled:opacity-50"
+            style={{ backgroundColor: "var(--panel-bg)" }}
           >
             {experiments.length === 0 ? (
-              <option value="">No experiments found</option>
+              <option value="" style={{ backgroundColor: "var(--panel-bg)" }}>No experiments found</option>
             ) : (
               experiments.map((experiment) => (
-                <option key={experiment.id} value={experiment.id}>
+                <option key={experiment.id} value={experiment.id} style={{ backgroundColor: "var(--panel-bg)" }}>
                   #{experiment.id} - {experiment.name}
                 </option>
               ))
