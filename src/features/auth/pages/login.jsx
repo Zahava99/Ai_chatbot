@@ -32,7 +32,7 @@ export default function LoginPage() {
 
       if (roles.includes("admin")) {
         navigate("/admin");
-      } else if (roles.includes("researcher")) {
+      } else if (roles.includes("instructor")) {
         navigate("/dashboard");
       } else {
         navigate("/");

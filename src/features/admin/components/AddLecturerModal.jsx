@@ -30,7 +30,7 @@ export default function AddLecturerModal({ show, onClose, onCreated }) {
         email: form.email.trim(),
         fullName: form.fullName.trim(),
         password: null,
-        roles: ["Researcher"],
+        roles: ["Instructor"],
       });
       onCreated(newUser);
       handleClose();

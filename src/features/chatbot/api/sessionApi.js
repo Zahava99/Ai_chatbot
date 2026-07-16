@@ -1,5 +1,6 @@
 import axios from "axios";
-import { API_CONFIG, getAuthHeaders } from "@/config/api";
+import { API_CONFIG } from "@/config/api";
+import { getAuthHeaders } from "@/features/auth/utills/authUtils";
 
 const sessionClient = axios.create({
   baseURL: API_CONFIG.BASE_URL,

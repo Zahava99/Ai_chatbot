@@ -189,7 +189,7 @@ export default function UploadDocumentPage() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       {/* Must Change Password Banner */}
-      <MustChangePasswordBanner />
+        {/* <MustChangePasswordBanner /> */}
 
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-app">Upload Documents</h1>

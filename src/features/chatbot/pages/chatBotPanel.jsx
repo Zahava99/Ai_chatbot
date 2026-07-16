@@ -202,37 +202,19 @@ export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated 
   const skipNextFetchRef = useRef(false);
 
   const activeSessionId = useChatbotStore((s) => s.activeSessionId);
-  const sessions = useChatbotStore((s) => s.sessions);
   const setActiveSession = useChatbotStore((s) => s.setActiveSession);
-
-  // Resolve active session title for the header
-  const activeSession = sessions.find((s) => s.id === activeSessionId) ?? null;
 
   // Load messages whenever the active session changes
   useEffect(() => {
     if (!activeSessionId) {
       setMessages([]);
+      setLoadingHistory(false);
       return;
     }
 
     // Skip fetch if we just created this session (messages are already in state)
     if (skipNextFetchRef.current) {
       skipNextFetchRef.current = false;
-      return;
-    }
-
-    // Check the store first (simulated / locally created sessions have messages)
-    const storeSession = sessions.find((s) => s.id === activeSessionId);
-    if (storeSession?.messages?.length) {
-      setMessages(storeSession.messages);
-      return;
-    }
-
-    // For locally created sessions that haven't been sent to the backend yet,
-    // just show the welcome screen (they use a prefix like "subjectId-session-")
-    const isLocalPlaceholder = String(activeSessionId).includes("-session-");
-    if (isLocalPlaceholder) {
-      setMessages([]);
       return;
     }
 
@@ -345,7 +327,7 @@ export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated 
       {/* Panel header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-app-border shrink-0">
         <span className="text-sm font-medium text-app opacity-90">
-          {activeSession ? activeSession.title : "Chat"}
+          {"Chat"}
         </span>
         <button className="p-1 rounded-md text-app opacity-40 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
           <MoreVertical size={16} />

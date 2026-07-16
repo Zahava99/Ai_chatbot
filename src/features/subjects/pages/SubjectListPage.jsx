@@ -61,7 +61,7 @@ export default function SubjectListPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {/* Must Change Password Banner */}
-      <MustChangePasswordBanner />
+        {/* <MustChangePasswordBanner /> */}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">

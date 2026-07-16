@@ -37,7 +37,7 @@ export default function LecturerSubjectListPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {/* Must Change Password Banner */}
-      <MustChangePasswordBanner error403={error} />
+      {/* <MustChangePasswordBanner error403={error} /> */}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
