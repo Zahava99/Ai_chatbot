@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { ThemeProvider } from "@/context/ThemeContext";
 import useAuthStore from "@/stores/useAuthStore";
 
 // ── Layout ──
 import AppLayout from "@/components/layout/AppLayout";
-import RoleGuard from "@/components/common/RoleGuard";
+import RoleGuard, { PrivateRoute, FallbackRedirect } from "@/components/common/RoleGuard";
 
 // ── Auth ──
 import SplashScreen from "@/features/auth/pages/splash";
@@ -107,9 +107,11 @@ function App() {
           <Route path="/change-password" element={<ChangePasswordPage />} />
           <Route path="/setup-account" element={<SetupAccountPage />} />
 
-          {/* ── Legacy notebook routes ── */}
-          <Route path="/" element={<MainPage />} />
-          <Route path="/notebook" element={<NotebookPage />} />
+          {/* ── Legacy notebook routes (auth required) ── */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/notebook" element={<NotebookPage />} />
+          </Route>
 
           {/* ── App (with sidebar layout) ── */}
           <Route element={<AppLayout />}>
@@ -197,7 +199,7 @@ function App() {
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<FallbackRedirect />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

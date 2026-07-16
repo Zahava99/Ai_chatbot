@@ -2,6 +2,29 @@ import { Outlet, Navigate, useLocation } from "react-router-dom";
 import useAuthStore from "@/stores/useAuthStore";
 
 /**
+ * Redirects unauthenticated users to /login.
+ * Preserves the intended destination in location state.
+ */
+export function PrivateRoute() {
+  const user = useAuthStore((s) => s.user);
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <Outlet />;
+}
+
+/**
+ * Fallback: sends authenticated users to "/" and guests to "/login".
+ */
+export function FallbackRedirect() {
+  const user = useAuthStore((s) => s.user);
+  return <Navigate to={user ? "/" : "/login"} replace />;
+}
+
+/**
  * Normalises a role value (string | string[] | null) into a lowercase array.
  */
 function toRoleArray(roles) {
