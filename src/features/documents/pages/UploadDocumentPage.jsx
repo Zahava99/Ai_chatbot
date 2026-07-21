@@ -121,8 +121,8 @@ export default function UploadDocumentPage() {
   }
 
   async function handleUpload() {
-    if (!subjectId || !chapterId || !title.trim() || files.length === 0) return;
-
+    // if (!subjectId || !chapterId || !title.trim() || files.length === 0) return;
+    if (!subjectId || !title.trim() || files.length === 0) return;
     setUploading(true);
     setSuccessMessage("");
 
@@ -182,7 +182,7 @@ export default function UploadDocumentPage() {
     files.length > 0 &&
     files.some((f) => f.status === "pending") &&
     subjectId &&
-    chapterId &&
+    // chapterId &&
     title.trim() &&
     !uploading;
 

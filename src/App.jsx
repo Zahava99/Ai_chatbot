@@ -129,10 +129,14 @@ function App() {
               <Route path="/documents" element={<DocumentListPage />} />
               <Route path="/documents_upload" element={<UploadDocumentPage />} />
               <Route path="/documents_upload/processing" element={<UploadProcessingPage />} />
+              {/* <Route path="/documents_upload/:id" element={<DocumentDetailPage />} />
+              <Route path="/documents_upload/:id/preview" element={<DocumentPreviewPage />} />
+              <Route path="/documents_upload/:id/chunks" element={<ChunkViewerPage />} /> */}
+              <Route path="/documents_upload/:id/reindex" element={<ReindexPage />} />
+              
               <Route path="/documents_upload/:id" element={<DocumentDetailPage />} />
               <Route path="/documents_upload/:id/preview" element={<DocumentPreviewPage />} />
               <Route path="/documents_upload/:id/chunks" element={<ChunkViewerPage />} />
-              <Route path="/documents_upload/:id/reindex" element={<ReindexPage />} />
 
               {/* Subjects */}
               <Route path="/subjects" element={<LecturerSubjectListPage />} />
