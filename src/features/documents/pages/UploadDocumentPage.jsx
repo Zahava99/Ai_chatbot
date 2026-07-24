@@ -67,6 +67,7 @@ export default function UploadDocumentPage() {
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [rejectedMessage, setRejectedMessage] = useState("");
   const inputRef = useRef(null);
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
@@ -100,17 +101,35 @@ export default function UploadDocumentPage() {
   }, [subjectId]);
 
   function addFiles(rawFiles) {
-    const newFiles = Array.from(rawFiles)
-      .filter((f) => ACCEPTED.some((ext) => f.name.toLowerCase().endsWith(ext)))
-      .map((f) => ({
-        id: Date.now() + Math.random(),
-        name: f.name,
-        size: f.size,
-        raw: f,
-        status: "pending",
-        progress: 0,
-        error: null,
-      }));
+    const allFiles = Array.from(rawFiles);
+    const accepted = [];
+    const rejected = [];
+
+    allFiles.forEach((f) => {
+      if (ACCEPTED.some((ext) => f.name.toLowerCase().endsWith(ext))) {
+        accepted.push(f);
+      } else {
+        rejected.push(f);
+      }
+    });
+
+    if (rejected.length > 0) {
+      const names = rejected.map((f) => f.name).join(", ");
+      setRejectedMessage(
+        `${rejected.length} file(s) skipped (unsupported format): ${names}`
+      );
+      setTimeout(() => setRejectedMessage(""), 5000);
+    }
+
+    const newFiles = accepted.map((f) => ({
+      id: Date.now() + Math.random(),
+      name: f.name,
+      size: f.size,
+      raw: f,
+      status: "pending",
+      progress: 0,
+      error: null,
+    }));
     setFiles((prev) => [...prev, ...newFiles]);
   }
 
@@ -313,6 +332,14 @@ export default function UploadDocumentPage() {
         <div className="mt-5 flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
           <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
           <p className="text-sm font-medium text-emerald-400">{successMessage}</p>
+        </div>
+      )}
+
+      {/* Rejected files message */}
+      {rejectedMessage && (
+        <div className="mt-5 flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20">
+          <AlertCircle size={16} className="text-red-400 shrink-0" />
+          <p className="text-sm font-medium text-red-400">{rejectedMessage}</p>
         </div>
       )}
 

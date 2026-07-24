@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, LayoutGrid, List, Filter,
-  ChevronDown, ChevronLeft, ChevronRight, MoreVertical, Eye, Trash2, RefreshCw,
+  ChevronLeft, ChevronRight, MoreVertical, Eye, Trash2, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
 import usePagination from "@/hook/usePagination";
+import useSortSubject from "@/hook/useSortSubject";
+import SortSubjectMenu from "@/components/common/SortSubjectMenu";
 
 const STATUS_STYLES = {
   indexed:    "text-emerald-400 bg-emerald-500/10",
@@ -124,6 +126,19 @@ export default function AdminDocumentListPage() {
     return instructors.map((i) => i.fullName || i.email).join(", ");
   }
 
+  /** Look up subject name by subjectId (for sorting) */
+  function getSubjectName(subjectId) {
+    if (!subjectId) return "";
+    const subject = subjects.find((s) => s.id === subjectId);
+    return subject?.name ?? "";
+  }
+
+  const { sortedItems: sortedDocs, sortBy, order, setSortBy, toggleOrder, SORT_OPTIONS } = useSortSubject(filtered, {
+    defaultSortBy: "name",
+    defaultOrder: "asc",
+    getSubjectName,
+  });
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Header */}
@@ -149,9 +164,13 @@ export default function AdminDocumentListPage() {
         <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-60 hover:opacity-100 transition-colors">
           <Filter size={14} /> Filter
         </button>
-        <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-60 hover:opacity-100 transition-colors">
-          Sort <ChevronDown size={14} />
-        </button>
+        <SortSubjectMenu
+          sortBy={sortBy}
+          order={order}
+          setSortBy={setSortBy}
+          toggleOrder={toggleOrder}
+          SORT_OPTIONS={SORT_OPTIONS}
+        />
         <div className="flex items-center bg-black/10 dark:bg-white/10 rounded-lg p-0.5">
           <button
             onClick={() => setView("table")}
@@ -182,9 +201,9 @@ export default function AdminDocumentListPage() {
             <tbody className="divide-y divide-app-border">
               {loading ? (
                 <tr><td colSpan={9} className="px-4 py-8 text-center text-app opacity-50">Loading...</td></tr>
-              ) : filtered.length === 0 ? (
+              ) : sortedDocs.length === 0 ? (
                 <tr><td colSpan={9} className="px-4 py-8 text-center text-app opacity-50">No documents found</td></tr>
-              ) : filtered.map((doc) => (
+              ) : sortedDocs.map((doc) => (
                 <tr key={doc.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
@@ -234,7 +253,7 @@ export default function AdminDocumentListPage() {
       {/* Grid view */}
       {view === "grid" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map((doc) => (
+          {sortedDocs.map((doc) => (
             <div
               key={doc.id}
               onClick={() => navigate(`/admin/documents/${doc.id}`)}

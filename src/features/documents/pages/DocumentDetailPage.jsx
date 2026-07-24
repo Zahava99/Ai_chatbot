@@ -36,6 +36,8 @@ export default function DocumentDetailPage() {
     setLoading(true);
     getDocumentById(id)
       .then((data) => {
+        console.log(data);
+        
         setDoc(data);
         // Fetch chunks preview
         setChunksLoading(true);
@@ -46,7 +48,7 @@ export default function DocumentDetailPage() {
           })
           .catch(() => setChunks([]))
           .finally(() => setChunksLoading(false));
-      })
+      })    
       .catch((err) => console.error("Failed to load document:", err))
       .finally(() => setLoading(false));
   }, [id]);
@@ -82,8 +84,8 @@ export default function DocumentDetailPage() {
 
   const metaRows = [
     { icon: FileText, label: "File name", value: doc.originalFileName || "No info" },
-    // { icon: Hash, label: "Chunk count", value: doc.chunkCount ? `${doc.chunkCount} chunks` : "No info" },
-    // { icon: Cpu, label: "Embedding model", value: doc.embeddingModel || "No info" },
+    { icon: Hash, label: "Chunk count", value: doc.chunkCount ? `${doc.chunkCount} chunks` : "No info" },
+    // { icon: Cpu, label: "Embedding model", value: doc.chunkingStrategyId || "No info" },
     { icon: Calendar, label: "Upload date", value: formatDate(doc.createdAtUtc) },
     { icon: Calendar, label: "Indexed date", value: formatDate(doc.indexedAtUtc) },
     // { icon: Hash, label: "Chunk size", value: doc.chunkSize ? `${doc.chunkSize} tokens` : "No info" },
@@ -135,7 +137,7 @@ export default function DocumentDetailPage() {
       {/* Metadata card */}
       <div className="bg-panel border border-app-border rounded-xl overflow-hidden mb-4">
         <div className="px-5 py-3 border-b border-app-border">
-          <p className="text-sm font-semibold text-app">Metadata</p>
+          <p className="text-sm font-semibold text-app">Metadatas</p>
         </div>
         <div className="divide-y divide-app-border">
           {metaRows.map(({ icon: Icon, label, value }) => (

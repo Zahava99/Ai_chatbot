@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FileText, Search, LayoutGrid, List, Upload, Filter,
-  ChevronDown, MoreVertical, Eye, Trash2, RefreshCw, Loader2,
+  MoreVertical, Eye, Trash2, RefreshCw, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getDocuments, deleteDocument, reindexDocument } from "@/api/documentApi";
@@ -10,6 +10,8 @@ import { getSubjects } from "@/api/subjectApi";
 // import MustChangePasswordBanner from "@/components/common/MustChangePasswordBanner";
 import useAuthStore from "@/stores/useAuthStore";
 import usePagination from "@/hook/usePagination";
+import useSortSubject from "@/hook/useSortSubject";
+import SortSubjectMenu from "@/components/common/SortSubjectMenu";
 import Pagination from "@/components/common/Pagination";
 
 const STATUS_STYLES = {
@@ -162,6 +164,19 @@ export default function DocumentListPage() {
     return subject?.code ?? "—";
   }
 
+  /** Look up subject name by subjectId (for sorting) */
+  function getSubjectName(subjectId) {
+    if (!subjectId) return "";
+    const subject = subjects.find((s) => s.id === subjectId);
+    return subject?.name ?? "";
+  }
+
+  const { sortedItems: sortedDocs, sortBy, order, setSortBy, toggleOrder, SORT_OPTIONS } = useSortSubject(visibleDocs, {
+    defaultSortBy: "name",
+    defaultOrder: "asc",
+    getSubjectName,
+  });
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       {/* Must Change Password Banner */}
@@ -195,9 +210,13 @@ export default function DocumentListPage() {
         <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-60 hover:opacity-100 transition-colors">
           <Filter size={14} /> Filter
         </button>
-        <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-app-border text-sm text-app opacity-60 hover:opacity-100 transition-colors">
-          Sort <ChevronDown size={14} />
-        </button>
+        <SortSubjectMenu
+          sortBy={sortBy}
+          order={order}
+          setSortBy={setSortBy}
+          toggleOrder={toggleOrder}
+          SORT_OPTIONS={SORT_OPTIONS}
+        />
         <div className="flex items-center bg-black/10 dark:bg-white/10 rounded-lg p-0.5">
           <button onClick={() => setView("table")} className={cn("p-1.5 rounded-md transition-colors text-app", view === "table" ? "bg-black/10 dark:bg-white/20" : "opacity-50 hover:opacity-100")}>
             <List size={15} />
@@ -222,9 +241,9 @@ export default function DocumentListPage() {
             <tbody className="divide-y divide-app-border">
               {loading ? (
                 <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">Loading...</td></tr>
-              ) : visibleDocs.length === 0 ? (
+              ) : sortedDocs.length === 0 ? (
                 <tr><td colSpan={8} className="px-4 py-8 text-center text-app opacity-50">No documents found</td></tr>
-              ) : visibleDocs.map((doc) => (
+              ) : sortedDocs.map((doc) => (
                 <tr key={doc.id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
@@ -272,7 +291,7 @@ export default function DocumentListPage() {
       {/* Grid view */}
       {view === "grid" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-          {visibleDocs.map((doc) => (
+          {sortedDocs.map((doc) => (
             <div key={doc.id} className="bg-panel border border-app-border rounded-xl p-4 hover:border-black/25 dark:hover:border-white/25 transition-colors cursor-pointer group"
               onClick={() => navigate(`/documents_upload/${doc.id}`)}
             >
