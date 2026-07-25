@@ -58,14 +58,14 @@ export default function CitationPanel({ source, onClose }) {
         )}
 
         {/* Relevance score if available */}
-        {source.relevanceScore != null && (
+        {/* {source.relevanceScore != null && (
           <div className="mt-4 flex items-center gap-2">
             <span className="text-xs text-app opacity-50">Relevance:</span>
             <span className="text-xs font-medium text-emerald-500">
               {(source.relevanceScore * 100).toFixed(1)}%
             </span>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
