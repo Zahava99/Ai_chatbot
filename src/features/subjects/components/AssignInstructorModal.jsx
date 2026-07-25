@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { X, Search, AlertCircle, Loader2, UserPlus, UserMinus, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers } from "@/api/adminApi";
 import { assignInstructor, unassignInstructor } from "@/api/subjectApi";
 import useSubjectStore from "@/stores/useSubjectStore";
 

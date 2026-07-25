@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, MoreVertical, Shield, Trash2, Ban, Activity, Mail, GraduationCap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAdminUsers, setAdminUserActive } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers, setAdminUserActive } from "@/api/adminApi";
 import { getSubjects } from "@/api/subjectApi";
 import AddLecturerModal from "@/features/admin/components/AddLecturerModal";
 

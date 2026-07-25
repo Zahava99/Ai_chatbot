@@ -29,11 +29,11 @@ const NAV_GROUPS = [
   {
     label: "Document Management",
     items: [
-      { to: "/documents",        icon: FileText,  label: "Tài liệu", roles: ["instructor"]},
-      { to: "/subjects",         icon: BookOpen,  label: "Môn học", roles: ["instructor"] },
-      { to: "/documents_upload", icon: Database,  label: "Upload Tài Liệu", roles: ["instructor"] },
-      { to: "/admin/subjects",         icon: BookOpen,  label: "Môn học", roles: ["admin"] },
-      { to: "/admin/documents",         icon: BookOpen,  label: "Tài liệu", roles: ["admin"] },
+      { to: "/documents",        icon: FileText,  label: "Documents", roles: ["instructor"]},
+      { to: "/subjects",         icon: BookOpen,  label: "Subjects", roles: ["instructor"] },
+      { to: "/documents_upload", icon: Database,  label: "Upload documents", roles: ["instructor"] },
+      { to: "/admin/subjects",         icon: BookOpen,  label: "Subjects", roles: ["admin"] },
+      { to: "/admin/documents",         icon: BookOpen,  label: "Documents", roles: ["admin"] },
     ],
   },
   {
@@ -41,8 +41,8 @@ const NAV_GROUPS = [
     roles: ["admin"],
     items: [
       { to: "/admin/users", icon: Users,         label: "Overview" },
-      { to: "/admin/lectures",    icon: GraduationCap, label: "Giảng Viên" },
-      { to: "/admin/students",    icon: Users,         label: "Sinh Viên" },
+      { to: "/admin/lectures",    icon: GraduationCap, label: "Lectures" },
+      { to: "/admin/students",    icon: Users,         label: "Students" },
     ],
   },
   {

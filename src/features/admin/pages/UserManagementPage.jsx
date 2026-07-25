@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, MoreVertical, Shield, User, Trash2, Ban, Activity, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers } from "@/api/adminApi";
 import usePagination from "@/hook/usePagination";
 import Pagination from "@/components/common/Pagination";
 

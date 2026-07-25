@@ -8,60 +8,13 @@ import {
   Clock, Cpu, BarChart2, Database, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAdminUsers } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers, fetchAdminConfig } from "@/api/adminApi";
 import { getDocuments } from "@/api/documentApi";
-
-/* ─── mock data ─────────────────────────────────────────────── */
-const STATS = [
-  {
-    icon: Users,
-    label: "Tổng người dùng",
-    value: "312",
-    sub: "across all roles",
-    delta: "+14",
-    deltaLabel: "this week",
-    up: true,
-    accent: "text-blue-400",
-    bg: "bg-blue-500/10",
-    ring: "ring-blue-500/20",
-  },
-  {
-    icon: GraduationCap,
-    label: "Giảng viên",
-    value: "28",
-    sub: "6 departments",
-    delta: "+2",
-    deltaLabel: "this month",
-    up: true,
-    accent: "text-violet-400",
-    bg: "bg-violet-500/10",
-    ring: "ring-violet-500/20",
-  },
-  {
-    icon: BookOpen,
-    label: "Sinh viên",
-    value: "284",
-    sub: "active accounts",
-    delta: "+12",
-    deltaLabel: "this week",
-    up: true,
-    accent: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    ring: "ring-emerald-500/20",
-  },
-  {
-    icon: Cpu,
-    label: "System Status",
-    value: "Online",
-    sub: "All services running",
-    delta: "Healthy",
-    deltaLabel: "",
-    up: null,
-    accent: "text-orange-400",
-    bg: "bg-orange-500/10",
-    ring: "ring-orange-500/20",
-  },
-];
+import {
+  fetchEmbeddingModels,
+  fetchChunkingStrategies,
+  fetchLlmModels,
+} from "@/api/benchmarkApi";
 
 const QUICK_ACTIONS = [
   // {
@@ -73,13 +26,13 @@ const QUICK_ACTIONS = [
   {
     icon: GraduationCap,
     label: "Manage Lecturers",
-    to: "/lectures",
+    to: "/admin/lectures",
     accent: "text-violet-400 bg-violet-500/10 hover:bg-violet-500/20",
   },
   {
     icon: BookOpen,
     label: "Manage Students",
-    to: "/students",
+    to: "/admin/students",
     accent: "text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20",
   },
   {
@@ -90,81 +43,22 @@ const QUICK_ACTIONS = [
   },
 ];
 
-const ROLE_DISTRIBUTION = [
-  { role: "Students",  count: 284, total: 312, color: "bg-emerald-400" },
-  { role: "Lecturers", count: 28,  total: 312, color: "bg-violet-400"  },
-  { role: "Admins",    count: 5,   total: 312, color: "bg-blue-400"    },
-];
 
-const RECENT_ACTIVITY = [
-  {
-    id: 1,
-    user: "Trần Thị Bình",
-    action: "Registered new account",
-    role: "student",
-    time: "2 min ago",
-    type: "register",
-  },
-  {
-    id: 2,
-    user: "TS. Lê Quốc Bảo",
-    action: "Uploaded lecture material",
-    role: "lecturer",
-    time: "18 min ago",
-    type: "upload",
-  },
-  {
-    id: 3,
-    user: "Nguyễn Văn An",
-    action: "Updated system settings",
-    role: "admin",
-    time: "1 hr ago",
-    type: "settings",
-  },
-  {
-    id: 4,
-    user: "Võ Thị Thu Hà",
-    action: "Added new course subject",
-    role: "lecturer",
-    time: "3 hrs ago",
-    type: "upload",
-  },
-  {
-    id: 5,
-    user: "Phạm Hoàng Long",
-    action: "Account deactivated",
-    role: "lecturer",
-    time: "Yesterday",
-    type: "ban",
-  },
-];
-
-const SYSTEM_HEALTH = [
-  { label: "API Server",     status: "online",  latency: "42 ms"  },
-  { label: "Vector DB",      status: "online",  latency: "11 ms"  },
-  { label: "Embedding Model",status: "online",  latency: "128 ms" },
-  { label: "File Storage",   status: "online",  latency: "8 ms"   },
-  { label: "Auth Service",   status: "warning", latency: "310 ms" },
-];
 
 const ROLE_BADGE = {
-  admin:    "text-blue-400 bg-blue-500/10",
+  admin: "text-blue-400 bg-blue-500/10",
   lecturer: "text-violet-400 bg-violet-500/10",
-  student:  "text-emerald-400 bg-emerald-500/10",
+  student: "text-emerald-400 bg-emerald-500/10",
 };
 
 const ACTIVITY_ICON = {
-  register: <UserPlus   size={13} className="text-emerald-400" />,
-  upload:   <Database   size={13} className="text-blue-400"    />,
-  settings: <Settings   size={13} className="text-orange-400"  />,
-  ban:      <AlertCircle size={13} className="text-red-400"    />,
+  register: <UserPlus size={13} className="text-emerald-400" />,
+  upload: <Database size={13} className="text-blue-400" />,
+  settings: <Settings size={13} className="text-orange-400" />,
+  ban: <AlertCircle size={13} className="text-red-400" />,
 };
 
-const HEALTH_META = {
-  online:  { dot: "bg-emerald-400",             label: "Online",  cls: "text-emerald-400" },
-  warning: { dot: "bg-yellow-400 animate-pulse", label: "Slow",   cls: "text-yellow-400"  },
-  offline: { dot: "bg-red-400",                 label: "Offline", cls: "text-red-400"     },
-};
+
 
 /* ─── sub-components ─────────────────────────────────────────── */
 function StatCard({ icon: Icon, label, value, sub, delta, deltaLabel, up, accent, bg, ring }) {
@@ -241,6 +135,7 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState([]);
   const [roleDistribution, setRoleDistribution] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [systemSettings, setSystemSettings] = useState(null);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -252,18 +147,37 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-        setError(null);
-        try {
-          const [usersData, docsData] = await Promise.all([
+      setError(null);
+      try {
+        const [usersData, docsData, configData, embeddingModels, chunkingStrategies, llmModels] = await Promise.all([
           fetchAdminUsers({ page: 1, pageSize: 100 }),
           getDocuments(1, 100).catch(() => ({ items: [], totalCount: 0 })),
+          fetchAdminConfig().catch(() => null),
+          fetchEmbeddingModels().catch(() => []),
+          fetchChunkingStrategies().catch(() => []),
+          fetchLlmModels().catch(() => []),
         ]);
+
+        // Resolve system settings names
+        if (configData) {
+          const embeddingModel = embeddingModels.find((m) => String(m.id) === String(configData.activeEmbeddingModelId));
+          const chunkingStrategy = chunkingStrategies.find((s) => String(s.id) === String(configData.activeChunkingStrategyId));
+          const llmModel = llmModels.find((m) => String(m.id) === String(configData.activeLlmModelId));
+
+          setSystemSettings({
+            activeEmbeddingModelName: embeddingModel?.name || "Not set",
+            activeChunkingStrategyName: chunkingStrategy?.name || "Not set",
+            activeLlmModelName: llmModel?.name || "Not set",
+            activeChunkSize: configData.activeChunkSize || "Default",
+            activeChunkOverlap: configData.activeChunkOverlap || "Default",
+          });
+        }
 
         const users = usersData.items || [];
         const docs = docsData.items || [];
 
         const totalUsers = usersData.totalCount ?? users.length;
-        const totalLecturers = users.filter((u) => u.roles.includes("Researcher")).length;
+        const totalLecturers = users.filter((u) => u.roles.includes("Instructor")).length;
         const totalStudents = users.filter((u) => u.roles.includes("Student")).length;
         const totalAdmins = users.filter((u) => u.roles.includes("Admin")).length;
 
@@ -305,26 +219,26 @@ export default function AdminDashboardPage() {
             bg: "bg-emerald-500/10",
             ring: "ring-emerald-500/20",
           },
-          {
-            icon: Cpu,
-            label: "System Status",
-            value: "Online",
-            sub: "All services running",
-            delta: "Healthy",
-            deltaLabel: "",
-            up: null,
-            accent: "text-orange-400",
-            bg: "bg-orange-500/10",
-            ring: "ring-orange-500/20",
-          },
+          // {
+          //   icon: Cpu,
+          //   label: "System Status",
+          //   value: "Online",
+          //   sub: "All services running",
+          //   delta: "Healthy",
+          //   deltaLabel: "",
+          //   up: null,
+          //   accent: "text-orange-400",
+          //   bg: "bg-orange-500/10",
+          //   ring: "ring-orange-500/20",
+          // },
         ];
         setStats(calculatedStats);
 
         // Role distribution
         const dist = [
-          { role: "Students",  count: totalStudents, total: totalUsers, color: "bg-emerald-400" },
-          { role: "Lecturers", count: totalLecturers,  total: totalUsers, color: "bg-violet-400"  },
-          { role: "Admins",    count: totalAdmins,   total: totalUsers, color: "bg-blue-400"    },
+          { role: "Students", count: totalStudents, total: totalUsers, color: "bg-emerald-400" },
+          { role: "Lecturers", count: totalLecturers, total: totalUsers, color: "bg-violet-400" },
+          { role: "Admins", count: totalAdmins, total: totalUsers, color: "bg-blue-400" },
         ];
         setRoleDistribution(dist);
 
@@ -463,7 +377,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {stats.map((s) => (
           <StatCard key={s.label} {...s} />
         ))}
@@ -510,7 +424,7 @@ export default function AdminDashboardPage() {
           </div>
           <div className="px-5 py-4 flex flex-col gap-4">
             {roleDistribution.map(({ role, count, total, color }) => {
-              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+              const pct = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
               return (
                 <div key={role} className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between text-xs">
@@ -532,44 +446,54 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* System health */}
+        {/* System Settings */}
         <div className="bg-panel border border-app-border rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-app-border">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-black/5 dark:bg-white/5 flex items-center justify-center">
-                <ShieldCheck size={14} className="text-app opacity-50" />
+                <Settings size={14} className="text-app opacity-50" />
               </div>
-              <span className="text-sm font-semibold text-app">System Health</span>
+              <span className="text-sm font-semibold text-app">System Settings</span>
             </div>
             <button
               onClick={() => navigate("/settings")}
               className="flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 transition-colors"
             >
-              Details <ArrowRight size={12} />
+              Configure <ArrowRight size={12} />
             </button>
           </div>
           <div className="divide-y divide-app-border">
-            {SYSTEM_HEALTH.map((svc) => {
-              const m = HEALTH_META[svc.status];
-              return (
-                <div
-                  key={svc.label}
-                  className="flex items-center justify-between px-5 py-3"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className={cn("w-2 h-2 rounded-full shrink-0", m.dot)} />
-                    <span className="text-sm text-app">{svc.label}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-app opacity-40">{svc.latency}</span>
-                    <span className={cn("text-xs font-medium", m.cls)}>{m.label}</span>
-                  </div>
+            {systemSettings ? (
+              <>
+                <div className="flex items-center justify-between px-5 py-3">
+                  <span className="text-sm text-app opacity-60">Embedding Model</span>
+                  <span className="text-sm text-app font-medium">{systemSettings.activeEmbeddingModelName}</span>
                 </div>
-              );
-            })}
+                <div className="flex items-center justify-between px-5 py-3">
+                  <span className="text-sm text-app opacity-60">Chunking Strategy</span>
+                  <span className="text-sm text-app font-medium">{systemSettings.activeChunkingStrategyName}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3">
+                  <span className="text-sm text-app opacity-60">LLM Model</span>
+                  <span className="text-sm text-app font-medium">{systemSettings.activeLlmModelName}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3">
+                  <span className="text-sm text-app opacity-60">Chunk Size</span>
+                  <span className="text-sm text-app font-medium">{systemSettings.activeChunkSize}</span>
+                </div>
+                <div className="flex items-center justify-between px-5 py-3">
+                  <span className="text-sm text-app opacity-60">Chunk Overlap</span>
+                  <span className="text-sm text-app font-medium">{systemSettings.activeChunkOverlap}</span>
+                </div>
+              </>
+            ) : (
+              <div className="px-5 py-6 text-center text-sm text-app opacity-40">
+                No configuration loaded
+              </div>
+            )}
           </div>
           <div className="px-5 py-3 border-t border-app-border bg-black/[0.02] dark:bg-white/[0.02]">
-            <p className="text-xs text-app opacity-25">Last checked just now</p>
+            <p className="text-xs text-app opacity-25">Active RAG pipeline configuration</p>
           </div>
         </div>
       </div>

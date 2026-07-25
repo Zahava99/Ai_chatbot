@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import Header from "@/components/common/header";
 import SourcesPanel from "./sourcesPanel";
 import ChatBotPanel from "./chatBotPanel";
+import CitationPanel from "./citationPanel";
 // TEMPORARY: notebookStore replaced by chatbotStore for simulation
 // import { useNotebookStore } from "@/features/chatbot/store/notebookStore";
 import { useChatbotStore } from "@/features/chatbot/store/chatbotStore";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 export default function NotebookPage() {
   const [sourcesCollapsed, setSourcesCollapsed] = useState(false);
   const [newlyCreatedSession, setNewlyCreatedSession] = useState(null);
+  const [activeCitation, setActiveCitation] = useState(null);
   const location = useLocation();
 
   // Subject the student navigated into (set by handleSubjectClick in mainPage)
@@ -61,8 +63,19 @@ export default function NotebookPage() {
               subjectId={subjectId}
               subjectCode={subjectCode}
               onSessionCreated={handleSessionCreated}
+              onCitationClick={(source) => setActiveCitation(source)}
             />
           </div>
+
+          {/* Citation panel */}
+          {activeCitation && (
+            <div className="w-[300px] flex flex-col rounded-xl bg-panel border border-app-border overflow-hidden shrink-0 transition-all duration-200">
+              <CitationPanel
+                source={activeCitation}
+                onClose={() => setActiveCitation(null)}
+              />
+            </div>
+          )}
 
         </div>
       </div>

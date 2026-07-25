@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Loader2, X } from "lucide-react";
-import { createAdminUser } from "@/features/admin/api/adminApi";
+import { createAdminUser } from "@/api/adminApi";
 
 /**
  * Modal for adding a new student.

@@ -6,7 +6,7 @@ import {
   fetchExperimentRuns,
   fetchExperiments,
   startExperiment,
-} from "@/features/benchmark/api/benchmarkApi";
+} from "@/api/benchmarkApi";
 
 const STATUS_STYLES = {
   queued: "text-yellow-400 bg-yellow-500/10",

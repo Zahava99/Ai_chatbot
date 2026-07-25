@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FileText, MessageSquare, Target, Cpu,
+  FileText, MessageSquare, Target,
   TrendingUp, TrendingDown, Clock, Upload,
   ArrowRight, MoreHorizontal, RefreshCw,
   CheckCircle2, AlertCircle, Loader2,
+  BookOpen, Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import useAuthStore from "@/stores/useAuthStore";
@@ -12,57 +13,7 @@ import useAuthStore from "@/stores/useAuthStore";
 import { getDocuments } from "@/api/documentApi";
 import { getSubjects } from "@/api/subjectApi";
 
-/* ─── mock data ─────────────────────────────────────────────── */
-const STATS = [
-  {
-    icon: FileText,
-    label: "Tổng tài liệu",
-    value: "24",
-    sub: "8 subjects",
-    delta: "+3",
-    deltaLabel: "this week",
-    up: true,
-    accent: "text-blue-400",
-    bg: "bg-blue-500/10",
-    ring: "ring-blue-500/20",
-  },
-  {
-    icon: MessageSquare,
-    label: "Tổng câu hỏi",
-    value: "1,284",
-    sub: "across all sessions",
-    delta: "+128",
-    deltaLabel: "today",
-    up: true,
-    accent: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    ring: "ring-emerald-500/20",
-  },
-  {
-    icon: Target,
-    label: "Accuracy Score",
-    value: "92.4%",
-    sub: "RAGAS evaluation",
-    delta: "+1.2%",
-    deltaLabel: "vs last run",
-    up: true,
-    accent: "text-purple-400",
-    bg: "bg-purple-500/10",
-    ring: "ring-purple-500/20",
-  },
-  {
-    icon: Cpu,
-    label: "Active Embedding",
-    value: "e5-base",
-    sub: "multilingual-e5-base",
-    delta: "Running",
-    deltaLabel: "",
-    up: null,
-    accent: "text-orange-400",
-    bg: "bg-orange-500/10",
-    ring: "ring-orange-500/20",
-  },
-];
+
 
 const STATUS_META = {
   indexed:    { label: "Indexed",    cls: "text-emerald-400 bg-emerald-500/10", dot: "bg-emerald-400" },
@@ -70,19 +21,13 @@ const STATUS_META = {
   error:      { label: "Error",      cls: "text-red-400 bg-red-500/10",         dot: "bg-red-400" },
 };
 
-const RECENT_UPLOADS = [
-  { id: 1, name: "Lecture_01.pdf",     subject: "Machine Learning",  size: "2.4 MB", status: "indexed",    date: "May 26, 2026", chunks: 48 },
-  { id: 2, name: "Chapter_3.docx",     subject: "Deep Learning",     size: "1.1 MB", status: "indexed",    date: "May 25, 2026", chunks: 22 },
-  { id: 3, name: "Slides_Week5.pptx",  subject: "NLP",               size: "5.8 MB", status: "processing", date: "May 25, 2026", chunks: 0  },
-  { id: 4, name: "Research_Paper.pdf", subject: "Computer Vision",   size: "3.2 MB", status: "error",      date: "May 24, 2026", chunks: 0  },
-  { id: 5, name: "Textbook_Ch7.pdf",   subject: "Algorithms",        size: "8.1 MB", status: "indexed",    date: "May 23, 2026", chunks: 134 },
-];
+
 
 const QUICK_ACTIONS = [
   { icon: Upload,    label: "Upload Document", to: "/documents_upload", accent: "text-blue-400 bg-blue-500/10 hover:bg-blue-500/20" },
-  { icon: MessageSquare, label: "New Chat",   to: "/chat",             accent: "text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20" },
-  { icon: Target,    label: "Run Benchmark",  to: "/benchmark",        accent: "text-purple-400 bg-purple-500/10 hover:bg-purple-500/20" },
-  { icon: RefreshCw, label: "Re-index All",   to: "/documents_upload",        accent: "text-orange-400 bg-orange-500/10 hover:bg-orange-500/20" },
+  { icon: FileText, label: "Document",   to: "/documents",             accent: "text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20" },
+  { icon: BookOpen,    label: "Subjects",  to: "/subjects",        accent: "text-purple-400 bg-purple-500/10 hover:bg-purple-500/20" },
+  // { icon: RefreshCw, label: "Re-index All",   to: "/documents_upload",        accent: "text-orange-400 bg-orange-500/10 hover:bg-orange-500/20" },
 ];
 
 /* ─── sub-components ─────────────────────────────────────────── */
@@ -180,7 +125,7 @@ export default function DashboardPage() {
       setError(null);
       try {
         const [docsData, subjectsData] = await Promise.all([
-          getDocuments(1, 10),
+          getDocuments(1, 100),
           getSubjects().catch(() => []),
         ]);
 
@@ -207,6 +152,10 @@ export default function DashboardPage() {
 
         const totalDocCount = userDocs.length;
         const totalSubjectCount = userSubjects.length;
+        const totalChunks = userDocs.reduce((sum, d) => sum + (d.chunkCount || 0), 0);
+
+        // Document indexing status
+        const indexedCount = userDocs.filter((d) => String(d.status).toLowerCase() === "indexed").length;
 
         // Populate stats
         const computedStats = [
@@ -223,10 +172,10 @@ export default function DashboardPage() {
             ring: "ring-blue-500/20",
           },
           {
-            icon: MessageSquare,
-            label: "Tổng câu hỏi",
-            value: "1,284",
-            sub: "across all sessions",
+            icon: BookOpen,
+            label: "Tổng môn học",
+            value: String(totalSubjectCount),
+            sub: "subjects managed",
             delta: "",
             deltaLabel: "",
             up: null,
@@ -235,10 +184,10 @@ export default function DashboardPage() {
             ring: "ring-emerald-500/20",
           },
           {
-            icon: Target,
-            label: "Accuracy Score",
-            value: "92.4%",
-            sub: "RAGAS evaluation",
+            icon: Layers,
+            label: "Tổng chunks",
+            value: totalChunks.toLocaleString(),
+            sub: "indexed content",
             delta: "",
             deltaLabel: "",
             up: null,
@@ -247,11 +196,11 @@ export default function DashboardPage() {
             ring: "ring-purple-500/20",
           },
           {
-            icon: Cpu,
-            label: "Active Embedding",
-            value: "e5-base",
-            sub: "multilingual-e5-base",
-            delta: "Running",
+            icon: CheckCircle2,
+            label: "Đã indexed",
+            value: `${indexedCount}/${totalDocCount}`,
+            sub: "documents indexed",
+            delta: indexedCount === totalDocCount ? "All done" : "In progress",
             deltaLabel: "",
             up: null,
             accent: "text-orange-400",
@@ -261,8 +210,11 @@ export default function DashboardPage() {
         ];
         setStats(computedStats);
 
-        // Recent Uploads — show only docs belonging to user's subjects
-        const uploadsToShow = userId ? userDocs.slice(0, 5) : docs.slice(0, 5);
+        // Recent Uploads — show only docs belonging to user's subjects (most recent first)
+        const sortedDocs = userId
+          ? [...userDocs].sort((a, b) => new Date(b.createdAtUtc) - new Date(a.createdAtUtc))
+          : [...docs].sort((a, b) => new Date(b.createdAtUtc) - new Date(a.createdAtUtc));
+        const uploadsToShow = sortedDocs.slice(0, 5);
         const mappedUploads = uploadsToShow.map((d) => {
           let sizeStr = "—";
           if (d.sizeBytes) {
@@ -285,7 +237,7 @@ export default function DashboardPage() {
             size: sizeStr,
             status: mapBackendStatus(d.status),
             date: dateStr,
-            chunks: d.pageCount || 0,
+            chunks: d.chunkCount || 0,
           };
         });
         setRecentUploads(mappedUploads);
@@ -372,7 +324,7 @@ export default function DashboardPage() {
       {/* ── Quick actions ── */}
       <div>
         <p className="text-xs text-app opacity-40 uppercase tracking-widest mb-3">Quick Actions</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {QUICK_ACTIONS.map(({ icon: Icon, label, to, accent }) => (
             <button
               key={label}

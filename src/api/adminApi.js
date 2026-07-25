@@ -1,4 +1,3 @@
-import axios from "axios";
 import { API_CONFIG } from "@/config/api";
 import { getAccessToken } from "@/features/auth/utills/authUtils";
 
@@ -100,3 +99,56 @@ export async function setAdminUserActive(id, isActive) {
   }
 }
 
+/**
+ * GET /api/v1/admin/config
+ * Returns the current system configuration.
+ */
+export async function fetchAdminConfig() {
+  const url = `${API_CONFIG.BASE_URL}/api/v1/admin/config`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAccessToken() ?? ""}`,
+    },
+  });
+
+  if (!res.ok) {
+    const message = await parseErrorResponse(
+      res,
+      `Failed to fetch config: ${res.status} ${res.statusText}`
+    );
+    throw new Error(message);
+  }
+
+  return res.json();
+}
+
+/**
+ * PUT /api/v1/admin/config
+ * Updates the system configuration.
+ * @param {object} config - Configuration payload
+ */
+export async function updateAdminConfig(config) {
+  const url = `${API_CONFIG.BASE_URL}/api/v1/admin/config`;
+
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getAccessToken() ?? ""}`,
+    },
+    body: JSON.stringify(config),
+  });
+
+  if (!res.ok) {
+    const message = await parseErrorResponse(
+      res,
+      `Failed to update config: ${res.status} ${res.statusText}`
+    );
+    throw new Error(message);
+  }
+
+  return res.json();
+}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Download, RefreshCw } from "lucide-react";
-import { fetchExperimentRuns } from "@/features/benchmark/api/benchmarkApi";
+import { fetchExperimentRuns } from "@/api/benchmarkApi";
 
 const STATUS_STYLES = {
   queued: "text-yellow-400 bg-yellow-500/10",

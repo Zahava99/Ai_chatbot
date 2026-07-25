@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import {
   fetchExperiments,
   fetchExperimentDashboard,
-} from "@/features/benchmark/api/benchmarkApi";
+} from "@/api/benchmarkApi";
 
 const METRICS = ["avgFaithfulness", "avgAnswerRelevancy", "avgContextPrecision", "avgContextRecall", "avgAnswerCorrectness"];
 const METRIC_LABELS = {

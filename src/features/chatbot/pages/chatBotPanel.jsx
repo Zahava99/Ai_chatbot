@@ -14,7 +14,7 @@ const SUGGESTIONS = [
 // ---------------------------------------------------------------------------
 // Source badge with hover popover
 // ---------------------------------------------------------------------------
-function SourceBadge({ source }) {
+function SourceBadge({ source, onClick }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -31,6 +31,7 @@ function SourceBadge({ source }) {
   return (
     <span className="relative inline-block align-baseline" ref={ref}>
       <button
+        onClick={() => onClick?.(source)}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
@@ -76,7 +77,7 @@ function SourceBadge({ source }) {
 // ---------------------------------------------------------------------------
 // Render answer text with [Source N] replaced by inline badges
 // ---------------------------------------------------------------------------
-function AnswerText({ text, sources }) {
+function AnswerText({ text, sources, onCitationClick }) {
   // Split on [Source N], [Sources N, M, ...], or [Nguồn N] patterns
   const parts = text.split(/(\[(?:Source[s]?|Nguồn)\s[\d,\s]+\])/gi);
 
@@ -97,7 +98,7 @@ function AnswerText({ text, sources }) {
             {indices.map((idx) => {
               const source = sources.find((s) => s.index === idx);
               return source ? (
-                <SourceBadge key={idx} source={source} />
+                <SourceBadge key={idx} source={source} onClick={onCitationClick} />
               ) : (
                 <span key={idx} className="text-blue-400 text-xs mx-0.5">
                   [{idx}]
@@ -114,7 +115,7 @@ function AnswerText({ text, sources }) {
 // ---------------------------------------------------------------------------
 // Message bubble
 // ---------------------------------------------------------------------------
-function MessageBubble({ message }) {
+function MessageBubble({ message, onCitationClick }) {
   const isUser = message.role === "user";
   const sources = message.sources ?? [];
 
@@ -154,7 +155,7 @@ function MessageBubble({ message }) {
               {message.text}
             </>
           ) : (
-            <AnswerText text={message.text} sources={sources} />
+            <AnswerText text={message.text} sources={sources} onCitationClick={onCitationClick} />
           )}
         </div>
 
@@ -162,7 +163,7 @@ function MessageBubble({ message }) {
         {!isUser && !message.error && sources.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mt-2 px-1">
             {sources.map((source) => (
-              <SourceBadge key={source.index} source={source} />
+              <SourceBadge key={source.index} source={source} onClick={onCitationClick} />
             ))}
           </div>
         )}
@@ -192,7 +193,7 @@ function TypingIndicator() {
 // ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
-export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated }) {
+export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated, onCitationClick }) {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -366,7 +367,7 @@ export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated 
         ) : (
           <div className="max-w-2xl mx-auto">
             {messages.map((msg) => (
-              <MessageBubble key={msg.id} message={msg} />
+              <MessageBubble key={msg.id} message={msg} onCitationClick={onCitationClick} />
             ))}
             {isTyping && <TypingIndicator />}
             <div ref={bottomRef} />

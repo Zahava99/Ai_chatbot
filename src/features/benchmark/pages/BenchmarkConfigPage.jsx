@@ -13,7 +13,7 @@ import {
   fetchTestQuestions,
   importTestQuestions,
   startExperiment,
-} from "@/features/benchmark/api/benchmarkApi";
+} from "@/api/benchmarkApi";
 
 const DEFAULT_EXPERIMENT_TYPE = "embedding_bench";
 

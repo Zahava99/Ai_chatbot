@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Search, MoreVertical, Trash2, Ban, Activity, Mail, Phone, BookOpen, GraduationCap, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchAdminUsers, setAdminUserActive } from "@/features/admin/api/adminApi";
+import { fetchAdminUsers, setAdminUserActive } from "@/api/adminApi";
 import AddStudentModal from "@/features/admin/components/AddStudentModal";
 import usePagination from "@/hook/usePagination";
 import Pagination from "@/components/common/Pagination";
