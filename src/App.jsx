@@ -73,6 +73,7 @@ import TierPackagePage from "@/features/admin/pages/TierPackagePage";
 import UpgradeTierPage from "@/features/payment/pages/UpgradeTierPage";
 import PaymentResultPage from "@/features/payment/pages/PaymentResultPage";
 import PaymentHistoryPage from "@/features/payment/pages/PaymentHistoryPage";
+import RevenueReportPage from "@/features/admin/pages/RevenueReportPage";
 
 // ── Legacy notebook (keep existing) ──
 import MainPage from "@/features/chatbot/pages/mainPage";
@@ -188,6 +189,7 @@ function App() {
               <Route path="/admin/documents/:id" element={<AdminDocumentDetailPage />} />
               <Route path="/admin/documents/:id/chunks" element={<AdminChunkViewerPage />} />
               <Route path="/admin/tier-package" element={<TierPackagePage />} />
+              <Route path="/admin/revenue-report" element={<RevenueReportPage />} />
               {/* Sessions */}
               <Route path="/sessions" element={<SessionsPage />} />
 
