@@ -220,7 +220,7 @@ function WalletBadge() {
     }
 
     fetchWallet();
-    const interval = setInterval(fetchWallet, 10000);
+    const interval = setInterval(fetchWallet, 30 * 60 * 1000); // refresh every 30 minutes
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
