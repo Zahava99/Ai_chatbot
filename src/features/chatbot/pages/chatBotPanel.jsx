@@ -234,11 +234,14 @@ function WalletBadge() {
 
   if (!wallet) return null;
 
+  const used = wallet.usedTokens ?? 0;
+  const available = wallet.availableTokens ?? 0;
+
   return (
     <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/8 border border-app-border">
       <Coins size={14} className="text-yellow-500" />
       <span className="text-xs font-medium text-app">
-        {wallet.usedTokens.toLocaleString()} / {wallet.availableTokens.toLocaleString()}
+        {used.toLocaleString()} / {available.toLocaleString()}
       </span>
     </div>
   );
