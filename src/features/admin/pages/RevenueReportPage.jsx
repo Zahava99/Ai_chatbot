@@ -4,15 +4,17 @@ import {
   RefreshCw, RotateCcw, Search, WalletCards, X,
 } from "lucide-react";
 import {
-  exportRevenueOrdersCsv, getDailyRevenue, getMonthlyRevenue, getPackageRevenue,
+  exportRevenueOrdersCsv, getDailyRevenue, getMonthlyRevenue,
   getRevenueBlobErrorMessage, getRevenueErrorMessage, getRevenueOrders, getRevenueSummary,
-  getStudentRevenueHistory, getTokenUsage, refundOrder,
+  getStudentRevenueHistory, refundOrder,
 } from "@/features/admin/api/revenueReportApi";
 import {
-  mapOrders, mapPackages, mapSummary,
+  mapOrders, mapSummary,
   mapDailyRevenue, mapMonthlyRevenue, mapRefundOrderResponse,
-  mapStudentRevenueHistory, mapTokenUsage,
+  mapStudentRevenueHistory,
 } from "@/features/admin/utils/revenueReportAdapters";
+import RevenueLineChart from "@/features/admin/components/revenue-report/RevenueLineChart";
+import PaidOrdersBarChart from "@/features/admin/components/revenue-report/PaidOrdersBarChart";
 
 const money = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
 const number = new Intl.NumberFormat("vi-VN");
@@ -70,36 +72,6 @@ function Panel({ title, children, action }) {
   );
 }
 
-function RevenueChart({ rows, type }) {
-  const values = rows.map((row) => Number(row.revenue)).filter(Number.isFinite);
-  if (!rows.length || !values.length) return <div className="grid h-72 place-items-center text-sm text-app opacity-40">Không có dữ liệu</div>;
-  const max = Math.max(...values, 1);
-  const points = rows.map((row, index) => {
-    const x = rows.length === 1 ? 50 : 6 + (index / (rows.length - 1)) * 88;
-    const y = 88 - (Number(row.revenue || 0) / max) * 72;
-    return { ...row, x, y };
-  });
-  return (
-    <div className="h-72 w-full p-4">
-      <svg viewBox="0 0 100 100" className="h-full w-full overflow-visible" preserveAspectRatio="none" role="img" aria-label={`Biểu đồ doanh thu ${type}`}>
-        {[16, 40, 64, 88].map((y) => <line key={y} x1="5" x2="95" y1={y} y2={y} stroke="currentColor" opacity=".08" />)}
-        {type === "monthly" ? points.map((point) => (
-          <rect key={point.key} x={point.x - 2.4} y={point.y} width="4.8" height={88 - point.y} rx="1" fill="#34d399">
-            <title>{`${display(point.label)}: ${money.format(Number(point.revenue))}${(point.orders ?? point.orderCount) != null ? ` · ${number.format(point.orders ?? point.orderCount)} đơn` : ""}`}</title>
-          </rect>
-        )) : <>
-          <polyline points={points.map((p) => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#34d399" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-          {points.map((point) => <circle key={point.key} cx={point.x} cy={point.y} r="1.5" fill="#34d399"><title>{`${display(point.label)}: ${money.format(Number(point.revenue))}${(point.orders ?? point.orderCount) != null ? ` · ${number.format(point.orders ?? point.orderCount)} đơn` : ""}`}</title></circle>)}
-        </>}
-      </svg>
-      <div className="flex justify-between text-[10px] text-app opacity-35">
-        {points.filter((_, i) => i === 0 || i === points.length - 1 || i === Math.floor(points.length / 2)).map((p) =>
-          <span key={p.key}>{String(display(p.label)).slice(0, 10)}</span>)}
-      </div>
-    </div>
-  );
-}
-
 function Modal({ title, close, children }) {
   return <div className="fixed inset-0 z-[100] grid place-items-center bg-black/55 p-4" onMouseDown={(e) => e.target === e.currentTarget && close()}>
     <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-app-border bg-panel shadow-2xl">
@@ -111,18 +83,6 @@ function Modal({ title, close, children }) {
   </div>;
 }
 
-function TokenRanking({ title, rows, metric }) {
-  return <section>
-    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-app opacity-50">{title}</h3>
-    {!rows.length ? <p className="rounded-xl border border-app-border py-7 text-center text-sm opacity-40">Không có dữ liệu xếp hạng</p> : <div className="overflow-x-auto rounded-xl border border-app-border">
-      <table className="w-full min-w-[560px] text-left text-sm">
-        <thead className="border-b border-app-border text-xs opacity-40"><tr><th className="px-3 py-2">#</th><th>Học sinh</th><th>Token khả dụng</th><th>Token đã dùng</th><th>Đã chi</th></tr></thead>
-        <tbody>{rows.map((row, index) => <tr key={`${metric}-${row.userId}`} className="border-b border-app-border last:border-0"><td className="px-3 py-2.5 opacity-40">{index + 1}</td><td><span className="block font-medium">{display(row.fullName)}</span><span className="block text-xs opacity-45">{display(row.email)}</span></td><td>{formatMetric("tokens", row.availableTokens)}</td><td className={metric === "usage" ? "font-semibold text-emerald-400" : ""}>{formatMetric("tokens", row.usedTokens)}</td><td className={metric === "spend" ? "font-semibold text-emerald-400" : ""}>{formatMetric("amount", row.totalSpent)}</td></tr>)}</tbody>
-      </table>
-    </div>}
-  </section>;
-}
-
 export default function RevenueReportPage() {
   const [filters, setFilters] = useState({ from: isoDate(initialFrom), to: isoDate(today), status: "", search: "", page: 1, pageSize: 20 });
   const [searchInput, setSearchInput] = useState("");
@@ -131,8 +91,6 @@ export default function RevenueReportPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [summary, setSummary] = useState({ loading: true, data: [], error: "" });
   const [chart, setChart] = useState({ loading: true, data: [], error: "" });
-  const [packages, setPackages] = useState({ loading: true, data: [], error: "" });
-  const [tokens, setTokens] = useState({ loading: true, data: null, error: "" });
   const [orders, setOrders] = useState({ loading: true, data: mapOrders([]), error: "" });
   const [history, setHistory] = useState(null);
   const [refund, setRefund] = useState(null);
@@ -175,17 +133,6 @@ export default function RevenueReportPage() {
       .catch((e) => active && setChart({ loading: false, data: [], error: getRevenueErrorMessage(e) }));
     return () => { active = false; };
   }, [tab, year, filters.from, filters.to, refreshKey]);
-
-  useEffect(() => {
-    let active = true;
-    setPackages((s) => ({ ...s, loading: true, error: "" }));
-    setTokens((s) => ({ ...s, loading: true, error: "" }));
-    getPackageRevenue().then((data) => active && setPackages({ loading: false, data: mapPackages(data), error: "" }))
-      .catch((e) => active && setPackages({ loading: false, data: [], error: getRevenueErrorMessage(e) }));
-    getTokenUsage().then((data) => active && setTokens({ loading: false, data: mapTokenUsage(data), error: "" }))
-      .catch((e) => active && setTokens({ loading: false, data: null, error: getRevenueErrorMessage(e) }));
-    return () => { active = false; };
-  }, [refreshKey]);
 
   useEffect(() => {
     let active = true;
@@ -255,12 +202,6 @@ export default function RevenueReportPage() {
     return "bg-black/5 dark:bg-white/5 text-app";
   };
 
-  const packageTotals = useMemo(() => packages.data.reduce((totals, item) => ({
-    revenue: totals.revenue + (Number(item.totalRevenue) || 0),
-    paidOrders: totals.paidOrders + (Number(item.paidOrders) || 0),
-    tokensIssued: totals.tokensIssued + (Number(item.totalTokensIssued) || 0),
-    activePackages: totals.activePackages + (item.isActive ? 1 : 0),
-  }), { revenue: 0, paidOrders: 0, tokensIssued: 0, activePackages: 0 }), [packages.data]);
   const monthlyTotals = useMemo(() => chart.data.reduce((totals, row) => ({
     revenue: totals.revenue + (Number(row.revenue) || 0),
     orders: totals.orders + (Number(row.orders) || 0),
@@ -293,45 +234,26 @@ export default function RevenueReportPage() {
       : summary.error ? <Panel title="Tổng quan"><ErrorState message={summary.error} retry={() => setRefreshKey((k) => k + 1)} /></Panel>
       : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{summary.data.length ? summary.data.map((item) => <div key={item.key} className="rounded-2xl border border-app-border bg-panel p-5"><WalletCards size={18} className="mb-5 text-emerald-400" /><p className="text-2xl font-bold text-app">{formatMetric(item.key, item.value)}</p><p className="mt-1 text-xs text-app opacity-45">{item.label}</p></div>) : <p className="text-sm opacity-40">Không có dữ liệu tổng quan.</p>}</div>}
 
-    <Panel title="Doanh thu theo thời gian" action={<div className="flex gap-1 rounded-lg bg-black/5 p-1 dark:bg-white/5">
-      {["daily", "monthly"].map((value) => <button key={value} onClick={() => setTab(value)} className={`rounded-md px-3 py-1 text-xs capitalize ${tab === value ? "bg-panel text-emerald-400 shadow" : "text-app opacity-50"}`}>{value}</button>)}</div>}>
+    <Panel title="Doanh thu theo thời gian" action={<div className="flex gap-1 rounded-xl bg-black/5 p-1 dark:bg-white/5">
+      {["daily", "monthly"].map((value) => <button key={value} onClick={() => setTab(value)} aria-pressed={tab === value} className={`rounded-lg px-4 py-2 text-xs font-semibold capitalize transition-all ${tab === value ? "bg-emerald-500 text-white shadow-sm" : "text-app opacity-50 hover:opacity-90"}`}>{value}</button>)}</div>}>
       {tab === "monthly" && <div className="px-5 pt-4"><select value={year} onChange={(e) => setYear(Number(e.target.value))} className="rounded-lg border border-app-border bg-panel px-3 py-2 text-sm">{[0, 1, 2, 3, 4].map((n) => <option key={n}>{today.getFullYear() - n}</option>)}</select></div>}
       {tab === "monthly" && !chart.loading && !chart.error && chart.data.length > 0 && <div className="grid gap-3 px-5 pt-4 sm:grid-cols-3">
-        <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{money.format(monthlyTotals.revenue)}</p><p className="text-xs opacity-45">Doanh thu năm {year}</p></div>
-        <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{number.format(monthlyTotals.orders)}</p><p className="text-xs opacity-45">Đơn đã thanh toán</p></div>
-        <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{number.format(monthlyTotals.newStudents)}</p><p className="text-xs opacity-45">Học sinh mua lần đầu</p></div>
+        <div className="rounded-xl border border-transparent bg-black/[.03] p-4 transition-all hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-md dark:bg-white/[.03]"><p className="text-xl font-bold tracking-tight text-app">{money.format(monthlyTotals.revenue)}</p><p className="mt-1 text-xs text-app opacity-45">Doanh thu năm {year}</p></div>
+        <div className="rounded-xl border border-transparent bg-black/[.03] p-4 transition-all hover:-translate-y-0.5 hover:border-blue-500/20 hover:shadow-md dark:bg-white/[.03]"><p className="text-xl font-bold tracking-tight text-app">{number.format(monthlyTotals.orders)}</p><p className="mt-1 text-xs text-app opacity-45">Đơn đã thanh toán</p></div>
+        <div className="rounded-xl border border-transparent bg-black/[.03] p-4 transition-all hover:-translate-y-0.5 hover:border-violet-500/20 hover:shadow-md dark:bg-white/[.03]"><p className="text-xl font-bold tracking-tight text-app">{money.format(monthlyTotals.revenue / chart.data.length)}</p><p className="mt-1 text-xs text-app opacity-45">Doanh thu trung bình/tháng</p></div>
       </div>}
       {tab === "daily" && !chart.loading && !chart.error && chart.data.length > 0 && <div className="grid gap-3 px-5 pt-4 sm:grid-cols-3">
-        <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{money.format(dailyTotals.revenue)}</p><p className="text-xs opacity-45">Doanh thu trong khoảng</p></div>
-        <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{number.format(dailyTotals.orders)}</p><p className="text-xs opacity-45">Đơn đã thanh toán</p></div>
-        <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{money.format(dailyTotals.revenue / chart.data.length)}</p><p className="text-xs opacity-45">Doanh thu trung bình/ngày</p></div>
+        <div className="rounded-xl border border-transparent bg-black/[.03] p-4 transition-all hover:-translate-y-0.5 hover:border-emerald-500/20 hover:shadow-md dark:bg-white/[.03]"><p className="text-xl font-bold tracking-tight text-app">{money.format(dailyTotals.revenue)}</p><p className="mt-1 text-xs text-app opacity-45">Doanh thu trong khoảng</p></div>
+        <div className="rounded-xl border border-transparent bg-black/[.03] p-4 transition-all hover:-translate-y-0.5 hover:border-blue-500/20 hover:shadow-md dark:bg-white/[.03]"><p className="text-xl font-bold tracking-tight text-app">{number.format(dailyTotals.orders)}</p><p className="mt-1 text-xs text-app opacity-45">Đơn đã thanh toán</p></div>
+        <div className="rounded-xl border border-transparent bg-black/[.03] p-4 transition-all hover:-translate-y-0.5 hover:border-violet-500/20 hover:shadow-md dark:bg-white/[.03]"><p className="text-xl font-bold tracking-tight text-app">{money.format(dailyTotals.revenue / chart.data.length)}</p><p className="mt-1 text-xs text-app opacity-45">Doanh thu trung bình/ngày</p></div>
       </div>}
-      {chart.loading ? <Skeleton rows={6} /> : chart.error ? <ErrorState message={chart.error} /> : <RevenueChart rows={chart.data} type={tab} />}
-    </Panel>
-
-    <div className="grid min-w-0 gap-5 xl:grid-cols-2">
-      <Panel title="Doanh thu theo gói dịch vụ">{packages.loading ? <Skeleton rows={5} /> : packages.error ? <ErrorState message={packages.error} /> : <div className="overflow-x-auto p-5">
-        {!packages.data.length ? <p className="py-12 text-center text-sm opacity-40">Không có dữ liệu</p> : <>
-          <div className="mb-5 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{money.format(packageTotals.revenue)}</p><p className="text-xs opacity-45">Tổng doanh thu các gói</p></div>
-            <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{number.format(packageTotals.paidOrders)}</p><p className="text-xs opacity-45">Đơn đã thanh toán</p></div>
-            <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{number.format(packageTotals.tokensIssued)}</p><p className="text-xs opacity-45">Token đã phát hành</p></div>
-            <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{number.format(packageTotals.activePackages)}</p><p className="text-xs opacity-45">Gói đang hoạt động</p></div>
-          </div>
-          <div className="mb-5 flex h-3 overflow-hidden rounded-full bg-black/5 dark:bg-white/5">{packages.data.map((p, i) => <span key={p.key} title={`${display(p.name)}: ${formatMetric("revenue", p.totalRevenue)}`} style={{ width: `${packageTotals.revenue ? (Number(p.totalRevenue) / packageTotals.revenue) * 100 : 0}%`, background: ["#34d399", "#60a5fa", "#a78bfa", "#fbbf24", "#fb7185"][i % 5] }} />)}</div>
-          <table className="w-full min-w-[720px] text-left text-sm"><thead className="text-xs opacity-40"><tr><th className="py-2">Gói</th><th>Giá</th><th>Token</th><th>Tổng đơn</th><th>Đã thanh toán</th><th>Doanh thu</th><th>TB/ngày</th><th>Trạng thái</th></tr></thead><tbody>{packages.data.map((p) => <tr key={p.key} className="border-t border-app-border"><td className="py-3">{display(p.name)}</td><td>{formatMetric("price", p.price)}</td><td>{formatMetric("tokens", p.tokenAmount)}</td><td>{formatMetric("count", p.totalOrders)}</td><td>{formatMetric("count", p.paidOrders)}</td><td>{formatMetric("revenue", p.totalRevenue)}</td><td>{formatMetric("revenue", p.avgRevenuePerDay)}</td><td><span className={`rounded-full px-2 py-1 text-xs ${p.isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-black/5 text-app opacity-50 dark:bg-white/5"}`}>{p.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}</span></td></tr>)}</tbody></table>
-        </>}</div>}</Panel>
-      <Panel title="Token Usage" action={<button onClick={() => setRefreshKey((k) => k + 1)} disabled={tokens.loading} className="flex items-center gap-1.5 rounded-lg border border-app-border px-3 py-1.5 text-xs disabled:opacity-50"><RefreshCw size={13} className={tokens.loading ? "animate-spin" : ""} /> Refresh</button>}>{tokens.loading ? <Skeleton rows={5} /> : tokens.error ? <ErrorState message={tokens.error} retry={() => setRefreshKey((k) => k + 1)} /> : !tokens.data ? <p className="py-12 text-center text-sm opacity-40">Không có dữ liệu</p> : <div className="space-y-5 p-5">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{formatMetric("count", tokens.data.activeWallets)}</p><p className="text-xs opacity-45">Ví đang hoạt động</p></div>
-          <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{formatMetric("count", tokens.data.expiredWallets)}</p><p className="text-xs opacity-45">Ví đã hết hạn</p></div>
-          <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{formatMetric("count", tokens.data.zeroBalanceWallets)}</p><p className="text-xs opacity-45">Ví hết token</p></div>
-          <div className="rounded-xl bg-black/[.03] p-4 dark:bg-white/[.03]"><p className="text-lg font-semibold text-app">{formatMetric("tokens", tokens.data.avgTokensPerStudent)}</p><p className="text-xs opacity-45">Token khả dụng TB/học sinh</p></div>
+      {chart.loading ? <Skeleton rows={6} /> : chart.error ? <ErrorState message={chart.error} retry={() => setRefreshKey((key) => key + 1)} /> : <div className="min-w-0 space-y-6 p-4 sm:p-5">
+        <RevenueLineChart rows={chart.data} period={tab} />
+        <div className="border-t border-app-border pt-5">
+          <PaidOrdersBarChart rows={chart.data} period={tab} />
         </div>
-        <TokenRanking title="Top 10 sử dụng token" rows={tokens.data.topByUsage} metric="usage" />
-        <TokenRanking title="Top 10 chi tiêu" rows={tokens.data.topBySpend} metric="spend" />
-      </div>}</Panel>
-    </div>
+      </div>}
+    </Panel>
 
     <Panel title="Danh sách đơn hàng">
       <div className="flex flex-wrap gap-3 border-b border-app-border p-4">
