@@ -67,6 +67,12 @@ import StudentManagementPage from "@/features/admin/pages/StudentManagementPage"
 import AdminDocumentListPage from "@/features/admin/pages/AdminDocumentListPage";
 import AdminDocumentDetailPage from "@/features/admin/pages/AdminDocumentDetailPage";
 import AdminChunkViewerPage from "@/features/admin/pages/AdminChunkViewerPage";
+import TierPackagePage from "@/features/admin/pages/TierPackagePage";
+
+// ── Upgrade / Payment ──
+import UpgradeTierPage from "@/features/payment/pages/UpgradeTierPage";
+import PaymentResultPage from "@/features/payment/pages/PaymentResultPage";
+import PaymentHistoryPage from "@/features/payment/pages/PaymentHistoryPage";
 
 // ── Legacy notebook (keep existing) ──
 import MainPage from "@/features/chatbot/pages/mainPage";
@@ -111,6 +117,9 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path="/" element={<MainPage />} />
             <Route path="/notebook" element={<NotebookPage />} />
+            <Route path="/upgrade" element={<UpgradeTierPage />} />
+            <Route path="/payment/result" element={<PaymentResultPage />} />
+            <Route path="/payment/history" element={<PaymentHistoryPage />} />
           </Route>
 
           {/* ── App (with sidebar layout) ── */}
@@ -178,6 +187,7 @@ function App() {
               <Route path="/admin/documents" element={<AdminDocumentListPage />} />
               <Route path="/admin/documents/:id" element={<AdminDocumentDetailPage />} />
               <Route path="/admin/documents/:id/chunks" element={<AdminChunkViewerPage />} />
+              <Route path="/admin/tier-package" element={<TierPackagePage />} />
               {/* Sessions */}
               <Route path="/sessions" element={<SessionsPage />} />
 

@@ -65,27 +65,12 @@ export default function StudentManagementPage() {
 
   const { page, pageSize, totalPages, canPrev, canNext, nextPage, prevPage, goToPage } = usePagination({ totalCount, pageSize: 10 });
 
-  function handleStudentCreated(newUser) {
-    setStudents((prev) => [
-      ...prev,
-      {
-        id: newUser.id ?? Date.now(),
-        name: newUser.fullName ?? "—",
-        email: newUser.email ?? "—",
-        status: resolveStatus(newUser),
-        lastActive: fmtDate(newUser.lastLoginUtc),
-        phone: newUser.phone ?? null,
-        studentId: newUser.studentId ?? null,
-        major: newUser.major ?? null,
-        year: newUser.year ?? null,
-        questions: newUser.questions ?? 0,
-        documents: newUser.documents ?? 0,
-      },
-    ]);
+  function handleStudentCreated() {
+    fetchStudents();
   }
 
   // ── fetch ──────────────────────────────────────────────────────────────────
-  useEffect(() => {
+  function fetchStudents() {
     setLoading(true);
     fetchAdminUsers({ page, pageSize, search })
       .then(({ items, totalCount: total }) => {
@@ -112,6 +97,10 @@ export default function StudentManagementPage() {
         setError("Failed to load students.");
       })
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchStudents();
   }, [page, pageSize, search]);
 
   // ── local actions (API connected) ─────────────────────────────────────────────

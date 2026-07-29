@@ -5,7 +5,7 @@ import {
   FlaskConical, BarChart3, History, LineChart, Settings,
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
   Sun, Monitor, User, HelpCircle, ExternalLink, KeyRound,
-  Database, GraduationCap, Users, BookOpen,
+  Database, GraduationCap, Users, BookOpen, Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
@@ -58,6 +58,7 @@ const NAV_GROUPS = [
     label: "System",
     roles: ["admin"],
     items: [
+      { to: "/admin/tier-package", icon: Package, label: "Tier Package" },
       { to: "/sessions", icon: History,  label: "Sessions" },
       { to: "/settings", icon: Settings, label: "Settings" },
     ],
@@ -324,14 +325,13 @@ export default function AppLayout() {
           <div className="flex items-center gap-1">
 
             {/* Notification bell */}
-            <div className="relative" ref={notifRef}>
+            {/* <div className="relative" ref={notifRef}>
               <button
                 onClick={() => setNotifOpen((v) => !v)}
                 className="relative p-2 rounded-lg text-app opacity-55 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                 aria-label="Notifications"
               >
                 <Bell size={16} />
-                {/* unread dot */}
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 border-2 border-header" />
               </button>
 
@@ -340,15 +340,15 @@ export default function AppLayout() {
                   <NotificationCenter onClose={() => setNotifOpen(false)} />
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* Help */}
-            <button
+            {/* <button
               className="p-2 rounded-lg text-app opacity-55 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               aria-label="Help"
             >
               <HelpCircle size={16} />
-            </button>
+            </button> */}
 
             {/* Divider */}
             <div className="w-px h-5 bg-app-border mx-1" />

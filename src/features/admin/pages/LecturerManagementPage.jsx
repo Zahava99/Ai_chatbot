@@ -61,29 +61,15 @@ export default function LecturerManagementPage() {
   // ── add lecturer modal ─────────────────────────────────────────────────────
   const [showAddModal, setShowAddModal] = useState(false);
 
-  function handleLecturerCreated(newUser) {
-    if (!newUser) return;
-    setLecturers((prev) => [
-      ...prev,
-      {
-        id: newUser.id ?? Date.now(),
-        name: newUser.fullName ?? "—",
-        email: newUser.email ?? "—",
-        status: resolveStatus(newUser),
-        lastActive: fmtDate(newUser.lastLoginUtc),
-        phone: newUser.phone ?? null,
-        department: null,
-        subjects: null,
-        documents: null,
-      },
-    ]);
+  function handleLecturerCreated() {
+    fetchLecturers();
   }
 
   // ── subjects state ──────────────────────────────────────────────────────────
   const [subjects, setSubjects] = useState([]);
 
   // ── fetch ──────────────────────────────────────────────────────────────────
-  useEffect(() => {
+  function fetchLecturers() {
     setLoading(true);
     Promise.all([fetchAdminUsers(), getSubjects()])
       .then(([usersRes, subjectsData]) => {
@@ -121,6 +107,10 @@ export default function LecturerManagementPage() {
         setError("Failed to load lecturers.");
       })
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    fetchLecturers();
   }, []);
 
   // ── local actions (API connected) ─────────────────────────────────────────────

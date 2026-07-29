@@ -7,6 +7,8 @@ import {
   ChevronRight,
   Check,
   KeyRound,
+  ArrowUpCircle,
+  Receipt,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "@/context/ThemeContext";
@@ -92,6 +94,15 @@ export default function Header() {
 
       {/* Right: Settings + Apps + Avatar */}
       <div className="flex items-center gap-1">
+
+        {/* Upgrade button */}
+        <button
+          onClick={() => navigate("/upgrade")}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-app-border text-app hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-sm"
+        >
+          <ArrowUpCircle size={15} />
+          <span>Upgrade</span>
+        </button>
 
         {/* Settings with dropdown */}
         <div className="relative" ref={settingsRef}>
@@ -189,6 +200,13 @@ export default function Header() {
               >
                 <KeyRound size={14} />
                 <span>Change Password</span>
+              </button>
+              <button
+                onClick={() => { setDropdownOpen(false); navigate("/payment/history"); }}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-app opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              >
+                <Receipt size={14} />
+                <span>Payment History</span>
               </button>
               <div className="my-1 border-t border-app-border" />
               <button
