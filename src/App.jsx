@@ -67,6 +67,7 @@ import StudentManagementPage from "@/features/admin/pages/StudentManagementPage"
 import AdminDocumentListPage from "@/features/admin/pages/AdminDocumentListPage";
 import AdminDocumentDetailPage from "@/features/admin/pages/AdminDocumentDetailPage";
 import AdminChunkViewerPage from "@/features/admin/pages/AdminChunkViewerPage";
+import RevenueReportPage from "@/features/admin/pages/RevenueReportPage";
 
 // ── Legacy notebook (keep existing) ──
 import MainPage from "@/features/chatbot/pages/mainPage";
@@ -178,6 +179,7 @@ function App() {
               <Route path="/admin/documents" element={<AdminDocumentListPage />} />
               <Route path="/admin/documents/:id" element={<AdminDocumentDetailPage />} />
               <Route path="/admin/documents/:id/chunks" element={<AdminChunkViewerPage />} />
+              <Route path="/admin/revenue-report" element={<RevenueReportPage />} />
               {/* Sessions */}
               <Route path="/sessions" element={<SessionsPage />} />
 

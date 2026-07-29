@@ -6,6 +6,7 @@ import {
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
   Sun, Monitor, User, HelpCircle, ExternalLink, KeyRound,
   Database, GraduationCap, Users, BookOpen,
+  CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
@@ -52,6 +53,13 @@ const NAV_GROUPS = [
       { to: "/research",  icon: FlaskConical, label: "Research Lab" },
       { to: "/benchmark", icon: BarChart3,    label: "Benchmark" },
       { to: "/analytics", icon: LineChart,    label: "Analytics" },
+    ],
+  },
+  {
+    label: "Reports",
+    roles: ["admin"],
+    items: [
+      { to: "/admin/revenue-report", icon: CircleDollarSign, label: "Revenue Report" },
     ],
   },
   {
