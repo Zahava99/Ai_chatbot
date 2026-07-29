@@ -6,7 +6,7 @@ import {
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
   Sun, Monitor, User, HelpCircle, ExternalLink, KeyRound,
   Database, GraduationCap, Users, BookOpen,
-  CircleDollarSign,
+  CircleDollarSign, WalletCards,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";
@@ -60,6 +60,8 @@ const NAV_GROUPS = [
     roles: ["admin"],
     items: [
       { to: "/admin/revenue-report", icon: CircleDollarSign, label: "Revenue Report" },
+      { to: "/admin/token-usage", icon: BarChart3, label: "Token Usage" },
+      { to: "/admin/package-revenue", icon: WalletCards, label: "Doanh thu theo gói" },
     ],
   },
   {
@@ -182,7 +184,9 @@ export default function AppLayout() {
   /* current page title */
   const pageTitle = (() => {
     const flat = NAV_GROUPS.flatMap((g) => g.items);
-    return flat.find((i) => location.pathname.startsWith(i.to))?.label ?? "EduChat";
+    return flat
+      .filter((i) => location.pathname === i.to || location.pathname.startsWith(`${i.to}/`))
+      .sort((a, b) => b.to.length - a.to.length)[0]?.label ?? "EduChat";
   })();
 
   function applyTheme(val) {
