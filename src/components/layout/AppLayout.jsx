@@ -6,7 +6,7 @@ import {
   Bell, LogOut, ChevronLeft, ChevronRight, Moon, Check,
   Sun, Monitor, User, HelpCircle, ExternalLink, KeyRound,
   Database, GraduationCap, Users, BookOpen,
-  CircleDollarSign, WalletCards,
+  CircleDollarSign, WalletCards, Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/ThemeContext";

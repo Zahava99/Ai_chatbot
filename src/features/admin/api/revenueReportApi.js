@@ -1,6 +1,6 @@
 import axios from "axios";
 import { API_CONFIG } from "@/config/api";
-import { ensureFreshToken } from "@/features/auth/api/authUtils";
+import { ensureFreshToken } from "@/features/auth/utills";
 
 const revenueClient = axios.create({
   baseURL: API_CONFIG.BASE_URL,
