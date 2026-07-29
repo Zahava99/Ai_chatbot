@@ -46,22 +46,22 @@ const NAV_GROUPS = [
       { to: "/admin/students",    icon: Users,         label: "Students" },
     ],
   },
-  {
-    label: "Research",
-    roles: ["admin"],
-    items: [
-      { to: "/research",  icon: FlaskConical, label: "Research Lab" },
-      { to: "/benchmark", icon: BarChart3,    label: "Benchmark" },
-      { to: "/analytics", icon: LineChart,    label: "Analytics" },
-    ],
-  },
+  // {
+  //   label: "Research",
+  //   roles: ["admin"],
+  //   items: [
+  //     { to: "/research",  icon: FlaskConical, label: "Research Lab" },
+  //     { to: "/benchmark", icon: BarChart3,    label: "Benchmark" },
+  //     { to: "/analytics", icon: LineChart,    label: "Analytics" },
+  //   ],
+  // },
   {
     label: "Reports",
     roles: ["admin"],
     items: [
       { to: "/admin/revenue-report", icon: CircleDollarSign, label: "Revenue Report" },
       { to: "/admin/token-usage", icon: BarChart3, label: "Token Usage" },
-      { to: "/admin/package-revenue", icon: WalletCards, label: "Doanh thu theo gói" },
+      { to: "/admin/package-revenue", icon: WalletCards, label: "Service Package Report" },
     ],
   },
   {
@@ -69,7 +69,7 @@ const NAV_GROUPS = [
     roles: ["admin"],
     items: [
       { to: "/admin/tier-package", icon: Package, label: "Tier Package" },
-      { to: "/sessions", icon: History,  label: "Sessions" },
+      // { to: "/sessions", icon: History,  label: "Sessions" },
       { to: "/settings", icon: Settings, label: "Settings" },
     ],
   },

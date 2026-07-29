@@ -34,9 +34,6 @@ import SubjectDetailPage from "@/features/subjects/pages/SubjectDetailPage";
 import LecturerSubjectListPage from "@/features/subjects/pages/LecturerSubjectListPage";
 import LecturerSubjectDetailPage from "@/features/subjects/pages/LecturerSubjectDetailPage";
 
-// ── Chat ──
-import ChatPage from "@/features/chat/pages/ChatPage";
-
 // ── Sessions ──
 import SessionsPage from "@/features/sessions/pages/SessionsPage";
 

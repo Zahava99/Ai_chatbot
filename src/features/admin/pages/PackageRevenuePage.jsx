@@ -70,9 +70,9 @@ export default function PackageRevenuePage() {
     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
       <div>
         <p className="mb-1 text-xs uppercase tracking-widest text-app opacity-40">Admin Reports</p>
-        <h1 className="text-2xl font-bold leading-tight text-app">Doanh thu theo gói dịch vụ</h1>
+        <h1 className="text-2xl font-bold leading-tight text-app">Service Package Report</h1>
         <p className="mt-1 text-sm text-app opacity-50">
-          Theo dõi doanh thu, số đơn và lượng token phát hành của từng gói dịch vụ.
+          Track revenue, number of orders, and token issuance for each service package.
         </p>
       </div>
       <button onClick={load} disabled={state.loading} className="flex items-center justify-center gap-2 rounded-xl border border-app-border bg-panel px-4 py-2.5 text-sm text-app disabled:opacity-50">
@@ -91,25 +91,25 @@ export default function PackageRevenuePage() {
           </button>
         </div>
       ) : !state.data.length ? (
-        <p className="py-20 text-center text-sm text-app opacity-40">Không có dữ liệu gói dịch vụ</p>
+        <p className="py-20 text-center text-sm text-app opacity-40">No data for service packages available.</p>
       ) : (
         <div className="space-y-6 p-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatMoney(totals.revenue)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Tổng doanh thu các gói</p>
+              <p className="mt-1 text-sm text-app opacity-45">Total revenue from all packages</p>
             </div>
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatNumber(totals.paidOrders)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Đơn đã thanh toán</p>
+              <p className="mt-1 text-sm text-app opacity-45">Paid Orders</p>
             </div>
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatNumber(totals.tokensIssued)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Token đã phát hành</p>
+              <p className="mt-1 text-sm text-app opacity-45">Tokens have been issued.</p>
             </div>
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatNumber(totals.activePackages)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Gói đang hoạt động</p>
+              <p className="mt-1 text-sm text-app opacity-45">Active service packages</p>
             </div>
           </div>
 
@@ -130,16 +130,16 @@ export default function PackageRevenuePage() {
             <table className="w-full min-w-[900px] text-left text-sm">
               <thead className="border-b border-app-border text-xs text-app opacity-40">
                 <tr>
-                  <th className="px-3 py-3">Gói</th>
-                  <th>Giá</th>
+                  <th className="px-3 py-3">Package</th>
+                  <th>Price</th>
                   <th>Token</th>
-                  <th>Tổng đơn</th>
-                  <th>Đã thanh toán</th>
-                  <th>Đang chờ</th>
-                  <th>Thất bại</th>
-                  <th>Doanh thu</th>
-                  <th>TB/ngày</th>
-                  <th>Trạng thái</th>
+                  <th>Total Order</th>
+                  <th>Paid</th>
+                  <th>Pending</th>
+                  <th>Failed</th>
+                  <th>Revenue</th>
+                  <th>Average/Day</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -156,7 +156,7 @@ export default function PackageRevenuePage() {
                     <td>{formatMoney(item.avgRevenuePerDay)}</td>
                     <td>
                       <span className={`rounded-full px-2 py-1 text-xs ${item.isActive ? "bg-emerald-500/10 text-emerald-400" : "bg-black/5 text-app opacity-50 dark:bg-white/5"}`}>
-                        {item.isActive ? "Đang hoạt động" : "Ngừng hoạt động"}
+                        {item.isActive ? "Active" : "Non Active"}
                       </span>
                     </td>
                   </tr>

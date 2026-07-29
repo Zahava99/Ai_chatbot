@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Wallet } from "lucide-react";
+import { ArrowLeft, Wallet, MessageSquare, ShoppingCart } from "lucide-react";
 import { getWalletHistory } from "@/api/paymentApi";
+import { cn } from "@/lib/utils";
 
 function formatDate(dateStr) {
   if (!dateStr) return "—";
@@ -15,11 +16,17 @@ function formatDate(dateStr) {
   });
 }
 
+const TABS = [
+  { key: "Purchase", label: "Nạp token", icon: ShoppingCart },
+  { key: "ChatUsage", label: "Sử dụng chat", icon: MessageSquare },
+];
+
 export default function PaymentHistoryPage() {
   const navigate = useNavigate();
   const [walletHistory, setWalletHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("Purchase");
 
   useEffect(() => {
     async function fetchHistory() {
@@ -35,6 +42,8 @@ export default function PaymentHistoryPage() {
     fetchHistory();
   }, []);
 
+  const filtered = walletHistory.filter((tx) => tx.type === activeTab);
+
   return (
     <div className="min-h-screen bg-app text-app flex flex-col">
       {/* Top bar */}
@@ -49,6 +58,28 @@ export default function PaymentHistoryPage() {
         <h1 className="text-lg font-semibold">Lịch sử ví token</h1>
       </div>
 
+      {/* Tabs */}
+      <div className="flex justify-center border-b border-app-border px-6">
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors",
+                activeTab === tab.key
+                  ? "border-emerald-500 text-emerald-500"
+                  : "border-transparent opacity-60 hover:opacity-100"
+              )}
+            >
+              <Icon size={15} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Content */}
       <div className="flex-1 p-6 max-w-3xl mx-auto w-full">
         {loading && (
@@ -61,13 +92,15 @@ export default function PaymentHistoryPage() {
           <p className="text-red-500 text-sm text-center py-8">Không thể tải lịch sử: {error}</p>
         )}
 
-        {!loading && !error && walletHistory.length === 0 && (
-          <p className="text-center opacity-60 py-16">Chưa có giao dịch ví nào.</p>
+        {!loading && !error && filtered.length === 0 && (
+          <p className="text-center opacity-60 py-16">
+            {activeTab === "Purchase" ? "Chưa có giao dịch nạp token nào." : "Chưa có lịch sử sử dụng chat."}
+          </p>
         )}
 
-        {!loading && !error && walletHistory.length > 0 && (
+        {!loading && !error && filtered.length > 0 && (
           <div className="space-y-3">
-            {walletHistory.map((tx) => (
+            {filtered.map((tx) => (
               <div
                 key={tx.id}
                 className="flex items-center gap-4 p-4 rounded-xl border border-app-border bg-panel"

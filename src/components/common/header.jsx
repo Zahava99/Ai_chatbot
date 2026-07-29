@@ -169,9 +169,9 @@ export default function Header() {
         </div>
 
         {/* Apps / Grid */}
-        <button className="p-2 rounded-md text-app opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
+        {/* <button className="p-2 rounded-md text-app opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
           <Grid3x3 size={16} />
-        </button>
+        </button> */}
 
         {/* Avatar with dropdown */}
         {!isAuthPage && (

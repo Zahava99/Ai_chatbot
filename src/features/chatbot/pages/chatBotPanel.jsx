@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { MoreVertical, ArrowRight, Bot, User, AlertCircle, FileText, Loader2 } from "lucide-react";
+import { Coins, ArrowRight, Bot, User, AlertCircle, FileText, Loader2 } from "lucide-react";
 import { useChatbotStore } from "@/features/chatbot/store/chatbotStore";
 import { fetchSessionMessages, sendSessionMessage, createChatSession } from "@/features/chatbot/api/sessionApi";
+import { API_CONFIG } from "@/config/api";
+import { getAuthHeaders } from "@/features/auth/utills/authUtils";
 import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = [
@@ -191,6 +193,58 @@ function TypingIndicator() {
 }
 
 // ---------------------------------------------------------------------------
+// Wallet badge – displays available tokens from /api/v1/payment/wallet/me
+// ---------------------------------------------------------------------------
+function WalletBadge() {
+  const [wallet, setWallet] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchWallet() {
+      try {
+        const url = `${API_CONFIG.BASE_URL}/api/v1/payment/wallet/me`;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: await getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error("Failed to fetch wallet");
+        const data = await response.json();
+        if (!cancelled) setWallet(data);
+      } catch {
+        if (!cancelled) setWallet(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchWallet();
+    const interval = setInterval(fetchWallet, 10000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/5">
+        <Loader2 size={13} className="animate-spin text-app opacity-40" />
+      </div>
+    );
+  }
+
+  if (!wallet) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/5 dark:bg-white/8 border border-app-border">
+      <Coins size={14} className="text-yellow-500" />
+      <span className="text-xs font-medium text-app">
+        {wallet.usedTokens.toLocaleString()} / {wallet.availableTokens.toLocaleString()}
+      </span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main panel
 // ---------------------------------------------------------------------------
 export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated, onCitationClick }) {
@@ -302,10 +356,37 @@ export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated,
       };
       setMessages((prev) => [...prev, botMsg]);
     } catch (err) {
+      const status = err?.response?.status;
+      const body = err?.response?.data;
+      const backendMessage =
+        (typeof body === "string" && body) ||
+        body?.detail ||
+        body?.message ||
+        body?.title;
+
+      let friendlyMessage;
+      if (backendMessage) {
+        friendlyMessage = backendMessage;
+      } else if (status === 401) {
+        friendlyMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+      } else if (status === 403) {
+        friendlyMessage = "Bạn không có quyền truy cập chức năng này. Vui lòng kiểm tra quyền tài khoản hoặc gói dịch vụ.";
+      } else if (status === 404) {
+        friendlyMessage = "Không tìm thấy phiên trò chuyện.";
+      } else if (status === 429) {
+        friendlyMessage = "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.";
+      } else if (status >= 500) {
+        friendlyMessage = "Hệ thống đang gặp lỗi. Vui lòng thử lại sau.";
+      } else if (err?.code === "ERR_NETWORK" || (!err?.response && err?.request)) {
+        friendlyMessage = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.";
+      } else {
+        friendlyMessage = err.message ?? "Đã xảy ra lỗi. Vui lòng thử lại.";
+      }
+
       const errorMsg = {
         id: `msg-${Date.now()}-err`,
         role: "bot",
-        text: err.message ?? "Something went wrong. Please try again.",
+        text: friendlyMessage,
         error: true,
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -330,9 +411,7 @@ export default function ChatBotPanel({ subjectId, subjectCode, onSessionCreated,
         <span className="text-sm font-medium text-app opacity-90">
           {"Chat"}
         </span>
-        <button className="p-1 rounded-md text-app opacity-40 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-          <MoreVertical size={16} />
-        </button>
+        <WalletBadge />
       </div>
 
       {/* Messages / welcome area */}

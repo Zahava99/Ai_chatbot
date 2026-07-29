@@ -26,7 +26,7 @@ export default function RevenueLineChart({ rows, period }) {
   const data = useMemo(() => ({
     labels: normalized.map((item) => item.label),
     datasets: [{
-      label: "Doanh thu",
+      label: "Revenue",
       data: normalized.map((item) => item.value),
       borderColor: "#34d399",
       pointBackgroundColor: "#34d399",
@@ -57,7 +57,7 @@ export default function RevenueLineChart({ rows, period }) {
     plugins: {
       title: {
         display: true,
-        text: period === "monthly" ? "Doanh thu theo tháng" : "Doanh thu theo ngày",
+        text: period === "monthly" ? "Revenue by month" : "Revenue by days",
         color: isDark ? "rgba(255,255,255,.82)" : "rgba(24,24,27,.82)",
         align: "start",
         font: { size: 13, weight: 600 },
@@ -113,14 +113,14 @@ export default function RevenueLineChart({ rows, period }) {
 
   if (!normalized.length) {
     return <div className="grid h-80 place-items-center text-sm text-app opacity-40">
-      Không có dữ liệu doanh thu trong khoảng đã chọn.
+      No order date in timerange
     </div>;
   }
 
   return <div className="relative min-h-[320px] w-full">
     {allZero && (
       <div className="absolute left-1/2 top-12 z-10 -translate-x-1/2 rounded-full border border-app-border bg-panel/90 px-3 py-1.5 text-xs text-app opacity-70 shadow-sm">
-        Khoảng thời gian này chưa phát sinh doanh thu
+        No payment in timerange
       </div>
     )}
     <Line data={data} options={options} />

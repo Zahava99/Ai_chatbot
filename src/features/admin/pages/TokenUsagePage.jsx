@@ -53,10 +53,10 @@ function RankingTable({ title, rows, metric }) {
           <thead className="border-b border-app-border text-xs text-app opacity-40">
             <tr>
               <th className="px-4 py-3">#</th>
-              <th>Học sinh</th>
-              <th>Token khả dụng</th>
-              <th>Token đã dùng</th>
-              <th>Đã chi</th>
+              <th>Student</th>
+              <th>Avalable Token</th>
+              <th>Used Token</th>
+              <th>Paid</th>
             </tr>
           </thead>
           <tbody>
@@ -107,7 +107,7 @@ export default function TokenUsagePage() {
         <p className="mb-1 text-xs uppercase tracking-widest text-app opacity-40">Admin Reports</p>
         <h1 className="text-2xl font-bold leading-tight text-app">Token Usage</h1>
         <p className="mt-1 text-sm text-app opacity-50">
-          Theo dõi tình trạng ví token và những học sinh sử dụng hoặc chi tiêu nhiều nhất.
+          Track the status of the token wallet and identify the students who use or spend the most.
         </p>
       </div>
       <button onClick={load} disabled={state.loading} className="flex items-center justify-center gap-2 rounded-xl border border-app-border bg-panel px-4 py-2.5 text-sm text-app disabled:opacity-50">
@@ -122,34 +122,34 @@ export default function TokenUsagePage() {
           <AlertCircle size={24} className="text-red-400" />
           <p className="text-sm text-red-400">{state.error}</p>
           <button onClick={load} className="rounded-lg border border-app-border px-4 py-2 text-sm text-app">
-            Thử lại
+            Re-try
           </button>
         </div>
       ) : !state.data ? (
-        <p className="py-20 text-center text-sm text-app opacity-40">Không có dữ liệu</p>
+        <p className="py-20 text-center text-sm text-app opacity-40">No data</p>
       ) : (
         <div className="space-y-7 p-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatNumber(state.data.activeWallets)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Ví đang hoạt động</p>
+              <p className="mt-1 text-sm text-app opacity-45">Active wallet</p>
             </div>
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatNumber(state.data.expiredWallets)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Ví đã hết hạn</p>
+              <p className="mt-1 text-sm text-app opacity-45">Expire wallet</p>
             </div>
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatNumber(state.data.zeroBalanceWallets)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Ví hết token</p>
+              <p className="mt-1 text-sm text-app opacity-45">Out of Token</p>
             </div>
             <div className="rounded-2xl bg-black/[.03] p-5 dark:bg-white/[.03]">
               <p className="text-2xl font-semibold text-app">{formatNumber(state.data.avgTokensPerStudent)}</p>
-              <p className="mt-1 text-sm text-app opacity-45">Token khả dụng TB/học sinh</p>
+              <p className="mt-1 text-sm text-app opacity-45">Avg. Available Tokens per Student</p>
             </div>
           </div>
 
-          <RankingTable title="Top 10 sử dụng token" rows={state.data.topByUsage} metric="usage" />
-          <RankingTable title="Top 10 chi tiêu" rows={state.data.topBySpend} metric="spend" />
+          <RankingTable title="Top 10 token usage" rows={state.data.topByUsage} metric="usage" />
+          <RankingTable title="Top 10 spending" rows={state.data.topBySpend} metric="spend" />
         </div>
       )}
     </section>

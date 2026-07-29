@@ -22,7 +22,7 @@ export default function PaidOrdersBarChart({ rows, period }) {
   const data = useMemo(() => ({
     labels: normalized.map((item) => item.label),
     datasets: [{
-      label: "Đơn đã thanh toán",
+      label: "Paid Order",
       data: normalized.map((item) => item.value),
       backgroundColor: "rgba(96, 165, 250, .72)",
       hoverBackgroundColor: "#60a5fa",
@@ -41,7 +41,7 @@ export default function PaidOrdersBarChart({ rows, period }) {
     plugins: {
       title: {
         display: true,
-        text: period === "monthly" ? "Đơn đã thanh toán theo tháng" : "Đơn đã thanh toán theo ngày",
+        text: period === "monthly" ? "Paid order by month" : "Paid order by days",
         color: isDark ? "rgba(255,255,255,.82)" : "rgba(24,24,27,.82)",
         align: "start",
         font: { size: 13, weight: 600 },
@@ -65,7 +65,7 @@ export default function PaidOrdersBarChart({ rows, period }) {
         displayColors: false,
         callbacks: {
           title: (items) => items[0]?.label ?? "—",
-          label: (context) => `Đơn đã thanh toán: ${integer.format(safeNumber(context.raw))}`,
+          label: (context) => `Paid order: ${integer.format(safeNumber(context.raw))}`,
         },
       },
     },
@@ -96,14 +96,14 @@ export default function PaidOrdersBarChart({ rows, period }) {
 
   if (!normalized.length) {
     return <div className="grid h-72 place-items-center text-sm text-app opacity-40">
-      Không có dữ liệu đơn hàng trong khoảng đã chọn.
+      No order date in timerange.
     </div>;
   }
 
   return <div className="relative min-h-[280px] w-full">
     {allZero && (
       <div className="absolute left-1/2 top-12 z-10 -translate-x-1/2 rounded-full border border-app-border bg-panel/90 px-3 py-1.5 text-xs text-app opacity-70 shadow-sm">
-        Chưa có đơn đã thanh toán trong khoảng này
+        No paid order in timerange
       </div>
     )}
     <Bar data={data} options={options} />

@@ -169,22 +169,22 @@ export function mapSummary(payload) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) return [];
 
   const fields = [
-    ["totalRevenue", "Tổng doanh thu"],
-    ["revenueThisMonth", "Doanh thu tháng này"],
-    ["revenueLastMonth", "Doanh thu tháng trước"],
-    ["monthOverMonthGrowthPct", "Tăng trưởng theo tháng"],
-    ["totalOrders", "Tổng đơn đã thanh toán"],
-    ["ordersThisMonth", "Đơn hàng tháng này"],
-    ["pendingOrders", "Đơn hàng chờ thanh toán"],
-    ["failedOrders", "Đơn hàng thất bại"],
-    ["totalStudentsWithWallet", "Học sinh có ví token"],
-    ["activeWallets", "Ví đang hoạt động"],
-    ["expiredWallets", "Ví đã hết hạn"],
-    ["conversionRatePct", "Tỷ lệ chuyển đổi"],
-    ["totalTokensIssued", "Tổng token đã phát hành"],
-    ["totalTokensConsumed", "Tổng token đã sử dụng"],
-    ["totalTokensRemaining", "Tổng token còn lại"],
-    ["tokenConsumptionRatePct", "Tỷ lệ sử dụng token"],
+    ["totalRevenue", "Total Revenue"],
+    ["revenueThisMonth", "Revenue This Month"],
+    ["revenueLastMonth", "Revenue Last Month"],
+    ["monthOverMonthGrowthPct", "Month Over Month Growth"],
+    ["totalOrders", "Total Orders"],
+    ["ordersThisMonth", "Orders This Month"],
+    ["pendingOrders", "Pending Orders"],
+    ["failedOrders", "Failed Orders"],
+    ["totalStudentsWithWallet", "Total Students With Wallet"],
+    ["activeWallets", "Active Wallets"],
+    ["expiredWallets", "Expired Wallets"],
+    ["conversionRatePct", "Conversion Rate"],
+    ["totalTokensIssued", "Total Tokens Issued"],
+    ["totalTokensConsumed", "Total Tokens Consumed"],
+    ["totalTokensRemaining", "Total Tokens Remaining"],
+    ["tokenConsumptionRatePct", "Token Consumption Rate"],
   ];
 
   return fields
