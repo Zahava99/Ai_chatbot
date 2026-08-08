@@ -98,8 +98,8 @@ export default function UpgradeTierPage() {
 
                   {/* CTA Button at bottom */}
                   <button
-                    onClick={() => index !== 0 && handlePurchase(pkg.id)}
-                    disabled={index === 0 || purchasing === pkg.id}
+                    onClick={() => handlePurchase(pkg.id)}
+                    disabled={purchasing === pkg.id}
                     className={`w-full py-2.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50 ${
                       isHighlight
                         ? "bg-blue-500 text-white hover:bg-blue-600"
@@ -108,9 +108,7 @@ export default function UpgradeTierPage() {
                   >
                     {purchasing === pkg.id
                       ? "Đang xử lý..."
-                      : index === 0
-                        ? "Your current plan"
-                        : `Upgrade to ${pkg.name}`}
+                      : `Upgrade to ${pkg.name}`}
                   </button>
                 </div>
               );
